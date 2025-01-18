@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 
-
-
 InputDecoration buildInputDecoratione(String hintText) {
   return InputDecoration(
-    border: OutlineInputBorder(),
+
+     border: OutlineInputBorder(),
     hintText: hintText,
     hintStyle: TextStyle(
         fontWeight: FontWeight.w500,

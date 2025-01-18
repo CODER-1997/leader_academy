@@ -56,7 +56,7 @@ class FreeOfChargeds extends StatelessWidget {
                               return GestureDetector(
                                 onTap: () {
                                   Get.to(StudentInfo(
-                                      studentId: students[i].id));
+                                      studentId: students[i].id, subject: '',));
                                 },
                                 child: StudentCard(
                                   item: students[i]['items'],

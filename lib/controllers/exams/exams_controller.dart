@@ -7,6 +7,7 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
   import 'package:share_plus/share_plus.dart';
@@ -24,6 +25,8 @@ class ExamsController extends GetxController {
   TextEditingController examEdit = TextEditingController();
   TextEditingController examQuestionCountEdit = TextEditingController();
   RxBool isCefrExam = false.obs;
+  RxBool isTestTypeExam = true.obs;
+
 
 
   setValues(
@@ -45,9 +48,9 @@ class ExamsController extends GetxController {
     try {
       ExamModel newData = ExamModel(
           name: examName.text,
-          questionNums: isCefrExam.value ? '40': examQuestionCount.text,
+          questionNums: isTestTypeExam.value == false ? '100': examQuestionCount.text,
           date: DateTime.now().toString(),
-          group: group, isCefr: isCefrExam.value);
+          group: group, isTestType: isTestTypeExam.value, isWarned: false);
       // Create a new document with an empty list
       await _dataCollection.add({
         'items': newData.toMap(),
@@ -103,6 +106,30 @@ class ExamsController extends GetxController {
     }
     isLoading.value = false;
   }
+  void setWarningExam(String documentId) async {
+
+    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+    // Function to update a specific document field by document ID
+    try {
+      isLoading.value = true;
+
+      // Reference to the document
+      DocumentReference documentReference =
+      _firestore.collection('LeaderExams').doc(documentId);
+
+      // Update the desired field
+      await documentReference.update({
+        'items.isWarned': true,
+         'items.warnedTime':DateFormat('dd-MM-yyyy HH:mm').format(DateTime.now())
+      });
+     } catch (e) {
+      print('Error updating document field: $e');
+      isLoading.value = false;
+    }
+    isLoading.value = false;
+  }
+
 
   void addFeature(String documentId, int order) async {
     isLoading.value = true;

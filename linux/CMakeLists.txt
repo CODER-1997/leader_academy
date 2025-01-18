@@ -66,7 +66,7 @@ add_executable(${BINARY_NAME}
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
 )
 
-# Apply the standard set of build settings. This can be removed for applications
+# Apply the standard set of build settings. This can be  for applications
 # that need different build settings.
 apply_standard_settings(${BINARY_NAME})
 
@@ -74,7 +74,7 @@ apply_standard_settings(${BINARY_NAME})
 target_link_libraries(${BINARY_NAME} PRIVATE flutter)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GTK)
 
-# Run the Flutter tool portions of the build. This must not be removed.
+# Run the Flutter tool portions of the build. This must not be .
 add_dependencies(${BINARY_NAME} flutter_assemble)
 
 # Only the install-generated bundle's copy of the executable will launch

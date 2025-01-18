@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:intl/intl.dart';
+import 'package:leader/screens/admin/students/super_search.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:leader/controllers/groups/group_controller.dart';
@@ -14,61 +16,109 @@ import '../../constants/utils.dart';
 import '../../controllers/students/student_controller.dart';
 import '../../services/sms_service.dart';
 import '../admin/students/student_info.dart';
-import 'additional_funcs/add_student.dart';
 
-class Attendance extends StatelessWidget {
+class Attendance extends StatefulWidget {
   final String groupId;
   final String groupName;
   final String groupDocId;
+  final String subject;
 
   Attendance({
     required this.groupId,
     required this.groupName,
     required this.groupDocId,
+    required this.subject,
   });
 
+  static RxBool messageLoader = false.obs;
+
+  @override
+  State<Attendance> createState() => _AttendanceState();
+}
+
+class _AttendanceState extends State<Attendance> {
   GetStorage box = GetStorage();
 
   RxList students = [].obs;
+
   RxList selectedStudents = [].obs;
-  static RxBool messageLoader = false.obs;
+
   RxBool messageLoader2 = false.obs;
+
   RxBool messageLoader3 = false.obs;
+
   TextEditingController customMessage = TextEditingController();
+
   RxBool isStudentChoosen = false.obs;
+
   StudentController studentController = Get.put(StudentController());
+
   final _formKey = GlobalKey<FormState>();
+
   RxList studentList = [].obs;
+
   SMSService _smsService = SMSService();
 
   RxList list = [].obs;
+
   RxList attendedStudents = [].obs;
+
   RxList unattendedStudents = [].obs;
+
   GroupController groupController = Get.put(GroupController());
 
-  double calculatePercentOfPayments(int paidSum , String totalFee){
-     print("${totalFee.toString().removeAllWhitespace}");
-    var percent = paidSum/int.parse(totalFee.toString().removeAllWhitespace);
+  double calculatePercentOfPayments(int paidSum, String totalFee) {
+    print("${totalFee.toString().removeAllWhitespace}");
+    var percent = paidSum / int.parse(totalFee.toString().removeAllWhitespace);
     print("${percent}");
 
-    return percent  <=1 ?  percent:1;
+    return percent <= 1 ? percent : 1;
   }
 
-  Color calculatePercentOfPaymentsColor(int paidSum,String totalFee){
-    var percent = paidSum/int.parse(totalFee.toString().removeAllWhitespace);
+  Color calculatePercentOfPaymentsColor(int paidSum, String totalFee) {
+    var percent = paidSum / int.parse(totalFee.toString().removeAllWhitespace);
 
-    if(percent <0.5){
+    if (percent < 0.5) {
       return Colors.red;
-    }
-    else if(percent >= 0.5 && percent <= 0.79) {
+    } else if (percent >= 0.5 && percent <= 0.79) {
       return Color(0xffff7528);
     }
     return Colors.green;
   }
 
+  String _searchText = '';
+
+  bool isStudentInGroup(String groupId, List groups) {
+    bool inGroup = false;
+
+    for (var item in groups) {
+      if (item['groupId'] == groupId) {
+        inGroup = true;
+        break;
+      }
+    }
+
+    return inGroup;
+  }
+
+  String setName(String name,String fam) {
+    String txt = box.read("attendance_text").toString();
+    txt = txt.replaceAll("#ismi", "$name".capitalizeFirst!);
+    txt = txt.replaceAll("#fam", "$fam".capitalizeFirst!);
+    txt = txt.replaceAll("#fan", "${widget.subject}".capitalizeFirst!);
+    txt = txt.replaceAll("#guruh", "${widget.groupName}".capitalizeFirst!);
+    txt = txt.replaceAll("#sana", "${DateFormat('dd-MM-yyyy').format(DateTime.now()).toString()}");
+
+    return txt;
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
+    print("groub ${widget.subject}");
+
     return Scaffold(
       backgroundColor: Color(0xffe8e8e8),
       body: SingleChildScrollView(
@@ -83,26 +133,31 @@ class Attendance extends StatelessWidget {
             //   ),
             //   child: Text(widget.lessonType.capitalizeFirst! + " Lesson",style: appBarStyle,),
             // ),
-            // Form(
-            //   key: _formKey,
-            //   child: TextField(
-            //     decoration: InputDecoration(
-            //       labelText: 'Search Items',
-            //       border: OutlineInputBorder(),
-            //     ),
-            //     onChanged: (value) {
-            //       setState(() {
-            //         _searchText = value.toLowerCase();
-            //       });
-            //     },
-            //   ),
-            // ),
-            // SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.all(2.0),
+              child: Form(
+                key: _formKey,
+                child: TextField(
+                  decoration: buildInputDecoratione('Qidirish'),
+                  onTap: () {
+                    Get.to(SuperSearch(students: studentList));
+                  },
+                ),
+              ),
+            ),
+            SizedBox(height: 4),
             StreamBuilder(
-                stream: FirebaseFirestore.instance
-                    .collection('LeaderStudents')
-                    .where('items.isDeleted', isEqualTo: false)
-                    .snapshots(),
+                stream: _searchText.isEmpty
+                    ? FirebaseFirestore.instance
+                        .collection('LeaderStudents')
+                        .snapshots()
+                    : FirebaseFirestore.instance
+                        .collection('LeaderStudents')
+                        .where('items.name',
+                            isGreaterThanOrEqualTo: _searchText)
+                        .where('items.name',
+                            isLessThanOrEqualTo: _searchText + '\uf8ff')
+                        .snapshots(),
                 builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator());
@@ -115,9 +170,9 @@ class Attendance extends StatelessWidget {
 
                     students.clear();
                     for (int i = 0; i < list.length; i++) {
-                      if (list[i]['items']['groups']
-                          .toList()
-                          .contains(groupId)) {
+      if (isStudentInGroup(widget.groupId, list[i]['items']['groups'].toList()) &&
+                          list[i]['items']['isDeleted'] == false) {
+                        studentList.add(list[i]);
                         students.add({
                           'name': list[i]['items']['name'],
                           'id': list[i].id,
@@ -126,10 +181,18 @@ class Attendance extends StatelessWidget {
                           'studyDays': list[i]['items']['studyDays'],
                           'uniqueId': list[i]['items']['uniqueId'],
                           'phone': list[i]['items']['phone'],
+                          'startedDay': list[i]['items']['startedDay'],
                           'yearlyFee': list[i]['items']['yeralyFee'].toString(),
                           'isFreeOfcharge': list[i]['items']['isFreeOfcharge'],
                         });
                       }
+      students .sort((a, b) => (a['surname']).compareTo(b['surname']));
+
+                    }
+                    students .sort((a, b) => (a['surname']).compareTo(b['surname']));
+                    for(int i  = 0 ; i < students.length ; i++){
+                      studentController.updatePayment(students[i]['id'], students[i]['payments']);
+
                     }
 
                     return students.length != 0
@@ -203,12 +266,17 @@ class Attendance extends StatelessWidget {
                                     child: GestureDetector(
                                       onLongPress: () {
                                         isStudentChoosen.value = true;
+                                        if(box.read('attendance_text') == null){
+                                           box.write('attendance_text', "Farzandingiz #ismi #fam  #fan #guruh darsiga kelmadi . #sana");
+                                        }
                                       },
                                       onTap: () {
-                                        if (box.read('isLogged') == '0094' &&
+                                        if ((box.read('isLogged') == '004422' || box.read('isLogged') == '0094') &&
                                             isStudentChoosen.value == false) {
+                                          print("XXX" + widget.subject);
                                           Get.to(StudentInfo(
                                             studentId: students[i]['id'],
+                                            subject: widget.subject,
                                           ));
                                         }
                                         if (isStudentChoosen.value == true) {
@@ -340,12 +408,12 @@ class Attendance extends StatelessWidget {
                                                                 .start,
                                                         children: [
                                                           Text(
-                                                            students[i]['name']
+                                                            students[i]['surname']
                                                                     .toString()
                                                                     .capitalizeFirst! +
                                                                 " " +
                                                                 students[i][
-                                                                        'surname']
+                                                                        'name']
                                                                     .toString()
                                                                     .capitalizeFirst!,
                                                             style: TextStyle(
@@ -375,30 +443,53 @@ class Attendance extends StatelessWidget {
                                                     SizedBox(
                                                       height: 4,
                                                     ),
-
-                                                    students[i]['yearlyFee'].toString()!= '0' ?             LinearPercentIndicator(
-                                                      animationDuration: 2000,
-                                                      animation: true,
-                                                      barRadius:Radius.circular(12) ,
-
-
-                                                      center: Text("${calculatePercentOfPayments(calculateTotalFee(students[i]['payments']) , students[i]['yearlyFee'] )*100}".substring(0,2) + "%",style: TextStyle(
-                                                          fontSize: 6,
-                                                          color: Colors.white
-                                                      ),),
-
-                                                      width: Get.width/3,
-                                                      lineHeight: 10.0,
-                                                      percent:calculatePercentOfPayments(calculateTotalFee(students[i]['payments']) , students[i]['yearlyFee']),
-                                                      backgroundColor: CupertinoColors.systemGrey3,
-                                                      progressColor: calculatePercentOfPaymentsColor(calculateTotalFee(students[i]['payments']) , students[i]['yearlyFee']),
-                                                    ):SizedBox(),
-
-
-
-
-                                                    hasDebtFromPayment( students[i] ['payments']) && students[i]['yearlyFee'].toString() == '0'
-
+                                                    students[i]['yearlyFee']
+                                                                .toString() !=
+                                                            '0'
+                                                        ? LinearPercentIndicator(
+                                                            animationDuration:
+                                                                2000,
+                                                            animation: true,
+                                                            barRadius:
+                                                                Radius.circular(
+                                                                    12),
+                                                            center: Text(
+                                                              "${calculatePercentOfPayments(calculateTotalFee(students[i]['payments']), students[i]['yearlyFee']) * 100}"
+                                                                      .substring(
+                                                                          0,
+                                                                          2) +
+                                                                  "%",
+                                                              style: TextStyle(
+                                                                  fontSize: 6,
+                                                                  color: Colors
+                                                                      .white),
+                                                            ),
+                                                            width:
+                                                                Get.width / 3,
+                                                            lineHeight: 10.0,
+                                                            percent: calculatePercentOfPayments(
+                                                                calculateTotalFee(
+                                                                    students[i][
+                                                                        'payments']),
+                                                                students[i][
+                                                                    'yearlyFee']),
+                                                            backgroundColor:
+                                                                CupertinoColors
+                                                                    .systemGrey3,
+                                                            progressColor: calculatePercentOfPaymentsColor(
+                                                                calculateTotalFee(
+                                                                    students[i][
+                                                                        'payments']),
+                                                                students[i][
+                                                                    'yearlyFee']),
+                                                          )
+                                                        : SizedBox(),
+                                                    hasDebtFromPayment(students[
+                                                                    i]
+                                                                ['payments']) &&
+                                                            students[i]['yearlyFee']
+                                                                    .toString() ==
+                                                                '0'
                                                         ? Container(
                                                             padding: EdgeInsets
                                                                 .symmetric(
@@ -423,14 +514,19 @@ class Attendance extends StatelessWidget {
                                                           )
                                                         : SizedBox(),
                                                     students[i]['isFreeOfcharge'] ==
-                                                            false &&   students[i]['yearlyFee'].toString() == '0'
+                                                                false &&
+                                                            students[i]['yearlyFee']
+                                                                    .toString() ==
+                                                                '0'
                                                         ? (calculateUnpaidMonths(
                                                                         students[i]
                                                                             [
                                                                             'studyDays'],
                                                                         students[i]
                                                                             [
-                                                                            'payments'])
+                                                                            'payments'],
+                                                                        widget
+                                                                            .subject)
                                                                     .length !=
                                                                 0
                                                             ? Container(
@@ -438,7 +534,7 @@ class Attendance extends StatelessWidget {
                                                                     EdgeInsets
                                                                         .all(4),
                                                                 child: Text(
-                                                                  '${calculateUnpaidMonths(students[i]['studyDays'], students[i]['payments']).length} oylik to\'lov qolgan',
+                                                                  '${calculateUnpaidMonths(students[i]['studyDays'], students[i]['payments'], widget.subject).length} oylik to\'lov qolgan',
                                                                   style: TextStyle(
                                                                       color: Colors
                                                                           .white,
@@ -459,6 +555,15 @@ class Attendance extends StatelessWidget {
                                                               )
                                                             : SizedBox())
                                                         : SizedBox(),
+                                                    Text(
+                                                      "Kelgan kuni:${students[i]['startedDay']}",
+                                                      style:
+                                                          appBarStyle.copyWith(
+                                                              fontSize: 10,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w900),
+                                                    )
                                                   ],
                                                   crossAxisAlignment:
                                                       CrossAxisAlignment.start,
@@ -467,45 +572,46 @@ class Attendance extends StatelessWidget {
                                             ),
                                             Row(
                                               children: [
-                                                getReason(
-                                                            students[i]
-                                                                ['studyDays'],
-                                                            studentController
-                                                                .selectedStudyDate
-                                                                .value,groupId)
-                                                        .isNotEmpty
-                                                    ? Container(
-                                                        width: Get.width / 6,
-                                                        alignment:
-                                                            Alignment.center,
-                                                        margin: EdgeInsets.only(
-                                                            right: 4, top: 8),
-                                                        padding: EdgeInsets
-                                                            .symmetric(
-                                                                horizontal: 4,
-                                                                vertical: 4),
-                                                        decoration: BoxDecoration(
-                                                            color: Colors.red,
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        122),
-                                                            border: Border.all(
-                                                                color:
-                                                                    Colors.red,
-                                                                width: 2)),
-                                                        child: Text(
-                                                          "${getReason(students[i]['studyDays'], studentController.selectedStudyDate.value,groupId)}",
-                                                          style: appBarStyle.copyWith(
-                                                              color:
-                                                                  Colors.white,
-                                                              fontSize: 8,
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis),
-                                                        ),
-                                                      )
-                                                    : SizedBox(),
+                                                // getReason(
+                                                //             students[i]
+                                                //                 ['studyDays'],
+                                                //             studentController
+                                                //                 .selectedStudyDate
+                                                //                 .value,
+                                                //             widget.groupId)
+                                                //         .isNotEmpty
+                                                //     ? Container(
+                                                //         width: Get.width / 8,
+                                                //         alignment:
+                                                //             Alignment.center,
+                                                //         margin: EdgeInsets.only(
+                                                //             right: 4, top: 8),
+                                                //         padding: EdgeInsets
+                                                //             .symmetric(
+                                                //                 horizontal: 4,
+                                                //                 vertical: 4),
+                                                //         decoration: BoxDecoration(
+                                                //             color: Colors.red,
+                                                //             borderRadius:
+                                                //                 BorderRadius
+                                                //                     .circular(
+                                                //                         122),
+                                                //             border: Border.all(
+                                                //                 color:
+                                                //                     Colors.red,
+                                                //                 width: 2)),
+                                                //         child: Text(
+                                                //           "${getReason(students[i]['studyDays'], studentController.selectedStudyDate.value, widget.groupId)}",
+                                                //           style: appBarStyle.copyWith(
+                                                //               color:
+                                                //                   Colors.white,
+                                                //               fontSize: 8,
+                                                //               overflow:
+                                                //                   TextOverflow
+                                                //                       .ellipsis),
+                                                //         ),
+                                                //       )
+                                                //     : SizedBox(),
                                                 InkWell(
                                                   onTap: () {
                                                     if (checkStatus(
@@ -513,12 +619,13 @@ class Attendance extends StatelessWidget {
                                                                 ['studyDays'],
                                                             studentController
                                                                 .selectedStudyDate
-                                                                .value, groupId) ==
+                                                                .value,
+                                                            widget.groupId) ==
                                                         'true') {
                                                       studentController
                                                           .removeStudyDay(
                                                               students[i]['id'],
-                                                              groupId,
+                                                              widget.groupId,
                                                               students[i]
                                                                   ['uniqueId'],
                                                               {
@@ -532,7 +639,7 @@ class Attendance extends StatelessWidget {
                                                       studentController
                                                           .setStudyDay(
                                                               students[i]['id'],
-                                                              groupId,
+                                                              widget.groupId,
                                                               students[i]
                                                                   ['uniqueId'],
                                                               {
@@ -541,7 +648,8 @@ class Attendance extends StatelessWidget {
                                                                 'commentary':
                                                                     "",
                                                               },
-                                                              true);
+                                                              true,
+                                                              widget.subject);
                                                     }
                                                   },
                                                   child: Container(
@@ -552,7 +660,9 @@ class Attendance extends StatelessWidget {
                                                                             'studyDays'],
                                                                         studentController
                                                                             .selectedStudyDate
-                                                                            .value,groupId) !=
+                                                                            .value,
+                                                                        widget
+                                                                            .groupId) !=
                                                                     'true' ||
                                                                 checkStatus(
                                                                         students[i]
@@ -560,7 +670,9 @@ class Attendance extends StatelessWidget {
                                                                             'studyDays'],
                                                                         studentController
                                                                             .selectedStudyDate
-                                                                            .value,groupId) ==
+                                                                            .value,
+                                                                        widget
+                                                                            .groupId) ==
                                                                     'notGiven'
                                                             ? .3
                                                             : 1),
@@ -575,12 +687,13 @@ class Attendance extends StatelessWidget {
                                                       'Bor',
                                                       style: TextStyle(
                                                           color: checkStatus(
-                                                                          students[i]
-                                                                              [
+                                                                          students[i][
                                                                               'studyDays'],
                                                                           studentController
                                                                               .selectedStudyDate
-                                                                              .value,groupId) !=
+                                                                              .value,
+                                                                          widget
+                                                                              .groupId) !=
                                                                       'true' ||
                                                                   checkStatus(
                                                                           students[i]
@@ -588,11 +701,13 @@ class Attendance extends StatelessWidget {
                                                                               'studyDays'],
                                                                           studentController
                                                                               .selectedStudyDate
-                                                                              .value,groupId) ==
+                                                                              .value,
+                                                                          widget
+                                                                              .groupId) ==
                                                                       'notGiven'
                                                               ? Colors.green
                                                               : Colors.white,
-                                                          fontSize: 12,
+                                                          fontSize: 16,
                                                           fontWeight:
                                                               FontWeight.w900),
                                                     ),
@@ -608,12 +723,13 @@ class Attendance extends StatelessWidget {
                                                                 ['studyDays'],
                                                             studentController
                                                                 .selectedStudyDate
-                                                                .value,groupId) ==
+                                                                .value,
+                                                            widget.groupId) ==
                                                         'false') {
                                                       studentController
                                                           .removeStudyDay(
                                                               students[i]['id'],
-                                                              groupId,
+                                                              widget.groupId,
                                                               students[i]
                                                                   ['uniqueId'],
                                                               {
@@ -732,13 +848,14 @@ class Attendance extends StatelessWidget {
                                                                       } else {
                                                                         studentController.setStudyDay(
                                                                             students[i]['id'],
-                                                                            groupId,
+                                                                            widget.groupId,
                                                                             students[i]['uniqueId'],
                                                                             {
                                                                               'hasReason': studentController.selectedAbsenseReason.value == "Sababli" ? true : false,
                                                                               'commentary': studentController.reasonOfBeingAbsent.text.isEmpty ? studentController.selectedAbsenseReason.value : studentController.reasonOfBeingAbsent.text,
                                                                             },
-                                                                            false);
+                                                                            false,
+                                                                            widget.subject);
 
                                                                         Get.back();
                                                                       }
@@ -769,7 +886,9 @@ class Attendance extends StatelessWidget {
                                                                             'studyDays'],
                                                                         studentController
                                                                             .selectedStudyDate
-                                                                            .value,groupId) ==
+                                                                            .value,
+                                                                        widget
+                                                                            .groupId) ==
                                                                     'notChecked' ||
                                                                 checkStatus(
                                                                         students[i]
@@ -777,7 +896,9 @@ class Attendance extends StatelessWidget {
                                                                             'studyDays'],
                                                                         studentController
                                                                             .selectedStudyDate
-                                                                            .value,groupId) ==
+                                                                            .value,
+                                                                        widget
+                                                                            .groupId) ==
                                                                     'true'
                                                             ? .3
                                                             : 1),
@@ -792,12 +913,13 @@ class Attendance extends StatelessWidget {
                                                       "Yo'q",
                                                       style: TextStyle(
                                                           color: checkStatus(
-                                                                          students[i]
-                                                                              [
+                                                                          students[i][
                                                                               'studyDays'],
                                                                           studentController
                                                                               .selectedStudyDate
-                                                                              .value,groupId) ==
+                                                                              .value,
+                                                                          widget
+                                                                              .groupId) ==
                                                                       'notChecked' ||
                                                                   checkStatus(
                                                                           students[i]
@@ -805,11 +927,13 @@ class Attendance extends StatelessWidget {
                                                                               'studyDays'],
                                                                           studentController
                                                                               .selectedStudyDate
-                                                                              .value,groupId) ==
+                                                                              .value,
+                                                                          widget
+                                                                              .groupId) ==
                                                                       'true'
                                                               ? Colors.red
                                                               : Colors.white,
-                                                          fontSize: 12,
+                                                          fontSize: 16,
                                                           fontWeight:
                                                               FontWeight.w900),
                                                     ),
@@ -915,8 +1039,8 @@ class Attendance extends StatelessWidget {
                 onTap: () async {
                   if (selectedStudents.isEmpty) {
                     Get.snackbar(
-                      'Error', // Title
-                      'Students are not selected', // Message
+                      'Xatolik', // Title
+                      'Talabalar tanlanmadi', // Message
                       snackPosition: SnackPosition.TOP,
                       // Position of the snackbar
                       backgroundColor: Colors.red,
@@ -953,7 +1077,7 @@ class Attendance extends StatelessWidget {
                                       height: 16,
                                     ),
                                     Text(
-                                      'Do you want to really send sms to numbers',
+                                      'Rostdanham shu raqamlarga sms yuborilsinmi ?',
                                       style: appBarStyle.copyWith(),
                                       textAlign: TextAlign.center,
                                     ),
@@ -968,10 +1092,10 @@ class Attendance extends StatelessWidget {
                                   children: [
                                     TextButton(
                                       onPressed: () async {
-                                        groupController.setSmsDate(groupDocId);
+                                        groupController
+                                            .setSmsDate(widget.groupDocId);
 
-                                        Get.back();
-                                        messageLoader.value = true;
+                                        Attendance.messageLoader.value = true;
                                         for (int i = 0;
                                             i < selectedStudents.length;
                                             i++) {
@@ -979,47 +1103,20 @@ class Attendance extends StatelessWidget {
                                                   selectedStudents[i]
                                                       ['studyDays'],
                                                   studentController
-                                                      .selectedStudyDate
-                                                      .value,groupId) ==
-                                              'true') {
-                                            if (await Permission
-                                                    .sms.isGranted &&
-                                                selectedStudents[i]['phone']
-                                                    .toString()
-                                                    .isNotEmpty) {
-                                              _smsService.sendSMS(
-                                                  selectedStudents[i]['phone'],
-                                                  "Assalomu Aleykum ,"
-                                                  "\nFarzandingiz ${selectedStudents[i]['surname'].toString().capitalizeFirst}  ${selectedStudents[i]['name'].toString().capitalizeFirst!}  bugungi ingliz tili  darsiga keldi. "
-                                                  "\nHurmat bilan Leader Acadey");
-                                            }
-                                          } else if (checkStatus(
-                                                  selectedStudents[i]
-                                                      ['studyDays'],
-                                                  studentController
-                                                      .selectedStudyDate
-                                                      .value,groupId) ==
+                                                      .selectedStudyDate.value,
+                                                  widget.groupId) ==
                                               'false') {
                                             if (await Permission
                                                     .sms.isGranted &&
                                                 selectedStudents[i]['phone']
                                                     .toString()
                                                     .isNotEmpty) {
-                                              var sabab = hasReason(
-                                                      selectedStudents[i]
-                                                          ['studyDays'],
-                                                      studentController
-                                                          .selectedStudyDate
-                                                          .value)
-                                                  ? "sababli"
-                                                  : "sababsiz";
-
                                               _smsService.sendSMS(
                                                   selectedStudents[i]['phone'],
-                                                  ""
-                                                  "Assalomu Aleykum ,"
-                                                  "\nFarzandingiz ${selectedStudents[i]['surname'].toString().capitalizeFirst!}  ${selectedStudents[i]['name'].toString().capitalizeFirst!}  bugungi ingliz tili  darsiga $sabab kelmadi. "
-                                                  "\nHurmat bilan Leader Acadey");
+                                                  setName(selectedStudents[i]
+                                                      ['name'],
+                                                      selectedStudents[i]
+                                                      ['surname']));
                                             }
                                           } else {
                                             print('Sms yuborilmadi');
@@ -1028,13 +1125,13 @@ class Attendance extends StatelessWidget {
                                               Duration(seconds: 1));
                                         }
 
-                                        messageLoader.value = false;
+                                        Attendance.messageLoader.value = false;
                                         selectedStudents.clear();
                                         isStudentChoosen.value = false;
 
                                         Get.snackbar(
-                                          'Message', // Title
-                                          'Your message has been sent',
+                                          'Xabar', // Title
+                                          'Xabar yuborildi',
                                           // Message
                                           snackPosition: SnackPosition.BOTTOM,
                                           // Position of the snackbar
@@ -1045,7 +1142,7 @@ class Attendance extends StatelessWidget {
                                         );
                                       },
                                       child: Text(
-                                        'Confirm'.tr.capitalizeFirst!,
+                                        'Tasdiqlash'.tr.capitalizeFirst!,
                                         style: appBarStyle.copyWith(
                                             color: Colors.green),
                                       ),
@@ -1053,7 +1150,7 @@ class Attendance extends StatelessWidget {
                                     TextButton(
                                         onPressed: Get.back,
                                         child: Text(
-                                          'Cancel',
+                                          'Bekor',
                                           style: appBarStyle.copyWith(
                                               color: Colors.red),
                                         )),
@@ -1069,301 +1166,298 @@ class Attendance extends StatelessWidget {
                 },
                 child: Obx(() => CustomButton(
                       color: Colors.green,
-                      text: messageLoader.value
-                          ? "Sending ..."
-                          : 'attendance'.tr.capitalizeFirst!,
+                      text: Attendance.messageLoader.value
+                          ? "Yuborilyapti ..."
+                          : 'Davomati'.tr.capitalizeFirst!,
                     )),
               )),
-              box.read('isLogged') == '0094'
-                  ? Expanded(
-                      child: InkWell(
-                      onTap: () async {
-                        if (selectedStudents.isEmpty) {
-                          Get.snackbar(
-                            'Error', // Title
-                            'Students are not selected', // Message
-                            snackPosition: SnackPosition.TOP,
-                            // Position of the snackbar
-                            backgroundColor: Colors.red,
-                            colorText: Colors.white,
-                            borderRadius: 8,
-                            margin: EdgeInsets.all(10),
-                          );
-                        } else {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return Dialog(
-                                backgroundColor: Colors.white,
-                                insetPadding:
-                                    EdgeInsets.symmetric(horizontal: 16),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12.0)),
-                                //this right here
-                                child: Container(
-                                  padding: EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(12)),
-                                  width: Get.width,
-                                  height: 180,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.center,
-                                        children: [
-                                          SizedBox(
-                                            height: 16,
-                                          ),
-                                          Text(
-                                            'Do you want to really send sms to numbers',
-                                            style: appBarStyle.copyWith(),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          SizedBox(
-                                            height: 16,
-                                          ),
-                                        ],
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceEvenly,
-                                        children: [
-                                          TextButton(
-                                            onPressed: () async {
-                                              Get.back();
-                                              messageLoader2.value = true;
-
-                                              for (int i = 0;
-                                                  i < selectedStudents.length;
-                                                  i++) {
-                                                if (selectedStudents[i][
-                                                            'isFreeOfcharge'] ==
-                                                        false &&
-                                                    hasDebtFromMonth(
-
-
-
-
-                                                        selectedStudents[i]
-                                                            ['payments'],
-                                                        convertDateToMonthYear(
-                                                            studentController
-                                                                .selectedStudyDate
-                                                                .value))) {
-                                                  if (await Permission
-                                                          .sms.isGranted &&
-                                                      selectedStudents[i]
-                                                              ['phone']
-                                                          .toString()
-                                                          .isNotEmpty) {
-                                                    _smsService.sendSMS(
-                                                        selectedStudents[i]
-                                                            ['phone'],
-                                                        "Hurmatli ota-ona, "
-                                                        "\nFarzandingiz ${selectedStudents[i]['surname'].toString().capitalizeFirst} ${selectedStudents[i]['name'].toString().capitalizeFirst!}ning ${getCurrentMonthInUzbek()} oylari uchun to'lovi oyning 5-sanasiga qadar to'lanishi kerak.");
-
-                                                    _smsService.sendSMS(
-                                                        selectedStudents[i]
-                                                            ['phone'],
-                                                        " Iltimos, to'lovni belgilangan muddatda amalga oshirishingizni so'raymiz.\nHurmat bilan Leader Acadey");
-                                                  }
-                                                }
-                                              }
-
-                                              messageLoader2.value = false;
-                                              selectedStudents.clear();
-                                              isStudentChoosen.value = false;
-
-                                              Get.snackbar(
-                                                'Message', // Title
-                                                'Your message has been sent',
-                                                // Message
-                                                snackPosition:
-                                                    SnackPosition.BOTTOM,
-                                                // Position of the snackbar
-                                                backgroundColor: Colors.green,
-                                                colorText: Colors.white,
-                                                borderRadius: 8,
-                                                margin: EdgeInsets.all(10),
-                                              );
-                                            },
-                                            child: Text(
-                                              'Confirm'.tr.capitalizeFirst!,
-                                              style: appBarStyle.copyWith(
-                                                  color: Colors.green),
-                                            ),
-                                          ),
-                                          TextButton(
-                                              onPressed: Get.back,
-                                              child: Text(
-                                                'Cancel',
-                                                style: appBarStyle.copyWith(
-                                                    color: Colors.red),
-                                              )),
-                                        ],
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        }
-                      },
-                      child: Obx(() => Container(
-                            margin: EdgeInsets.only(left: 4),
-                            child: CustomButton(
-                              color: Colors.red,
-                              text: messageLoader2.value
-                                  ? "Sending..."
-                                  : 'Payment',
-                            ),
-                          )),
-                    ))
-                  : SizedBox(),
-              box.read('isLogged') == '0094'
-                  ? Expanded(
-                      child: InkWell(
-                      onTap: () async {
-                        if (selectedStudents.isEmpty) {
-                          Get.snackbar(
-                            'Error', // Title
-                            'Students are not selected', // Message
-                            snackPosition: SnackPosition.TOP,
-                            // Position of the snackbar
-                            backgroundColor: Colors.red,
-                            colorText: Colors.white,
-                            borderRadius: 8,
-                            margin: EdgeInsets.all(10),
-                          );
-                        } else {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return Dialog(
-                                backgroundColor: Colors.white,
-                                insetPadding:
-                                    EdgeInsets.symmetric(horizontal: 16),
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12.0)),
-                                //this right here
-                                child: Form(
-                                  key: _formKey,
-                                  child: Container(
-                                    padding: EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                        color: Colors.white,
-                                        borderRadius:
-                                            BorderRadius.circular(12)),
-                                    width: Get.width,
-                                    height: Get.height / 2.5,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Column(
-                                          children: [
-                                            SizedBox(
-                                              height: 16,
-                                            ),
-                                            TextFormField(
-                                              maxLines: 5,
-                                              controller: customMessage,
-                                              maxLength: 80,
-                                              keyboardType: TextInputType.text,
-                                              decoration: buildInputDecoratione(
-                                                  'Your message here'
-                                                          .tr
-                                                          .capitalizeFirst! ??
-                                                      ''),
-                                            ),
-                                            SizedBox(
-                                              height: 16,
-                                            ),
-                                          ],
-                                        ),
-                                        InkWell(
-                                          onTap: () async {
-                                            messageLoader3.value = true;
-                                            if (customMessage.text.isNotEmpty) {
-                                              for (int i = 0;
-                                                  i < selectedStudents.length;
-                                                  i++) {
-                                                if (await Permission
-                                                        .sms.isGranted &&
-                                                    selectedStudents[i]['phone']
-                                                        .toString()
-                                                        .isNotEmpty) {
-                                                  _smsService.sendSMS(
-                                                      selectedStudents[i]
-                                                          ['phone'],
-                                                      customMessage.text +
-                                                          "\nHurmat bilan Leader Acadey");
-                                                }
-
-                                                await Future.delayed(
-                                                    Duration(seconds: 1));
-                                              }
-                                              messageLoader3.value = false;
-                                              customMessage.clear();
-                                              selectedStudents.clear();
-                                              isStudentChoosen.value = false;
-
-                                              Get.back();
-
-                                              Get.snackbar(
-                                                'Message', // Title
-                                                'Your message has been sent',
-                                                // Message
-                                                snackPosition:
-                                                    SnackPosition.BOTTOM,
-                                                // Position of the snackbar
-                                                backgroundColor: Colors.blue,
-                                                colorText: Colors.white,
-                                                borderRadius: 8,
-                                                margin: EdgeInsets.all(10),
-                                              );
-                                            } else {
-                                              Get.back();
-                                            }
-                                          },
-                                          child: Obx(() => CustomButton(
-                                              isLoading: studentController
-                                                  .isLoading.value,
-                                              text: messageLoader3.value
-                                                  ? "Sending. . ."
-                                                  : "Send"
-                                                      .tr
-                                                      .capitalizeFirst!)),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        }
-                      },
-                      child: Container(
-                        margin: EdgeInsets.only(left: 4),
-                        child: CustomButton(
-                          color: Colors.blue,
-                          text: 'Custom',
-                        ),
-                      ),
-                    ))
-                  : SizedBox(),
+              // box.read('isLogged') == '0094'
+              //     ? Expanded(
+              //         child: InkWell(
+              //         onTap: () async {
+              //           if (selectedStudents.isEmpty) {
+              //             Get.snackbar(
+              //               'Xatolik', // Title
+              //               'Talabalar tanlanmadi', // Message
+              //               snackPosition: SnackPosition.TOP,
+              //               // Position of the snackbar
+              //               backgroundColor: Colors.red,
+              //               colorText: Colors.white,
+              //               borderRadius: 8,
+              //               margin: EdgeInsets.all(10),
+              //             );
+              //           } else {
+              //             showDialog(
+              //               context: context,
+              //               builder: (BuildContext context) {
+              //                 return Dialog(
+              //                   backgroundColor: Colors.white,
+              //                   insetPadding:
+              //                       EdgeInsets.symmetric(horizontal: 16),
+              //                   shape: RoundedRectangleBorder(
+              //                       borderRadius: BorderRadius.circular(12.0)),
+              //                   //this right here
+              //                   child: Container(
+              //                     padding: EdgeInsets.all(16),
+              //                     decoration: BoxDecoration(
+              //                         color: Colors.white,
+              //                         borderRadius: BorderRadius.circular(12)),
+              //                     width: Get.width,
+              //                     height: 180,
+              //                     child: Column(
+              //                       crossAxisAlignment:
+              //                           CrossAxisAlignment.center,
+              //                       mainAxisAlignment:
+              //                           MainAxisAlignment.spaceBetween,
+              //                       children: [
+              //                         Column(
+              //                           mainAxisAlignment:
+              //                               MainAxisAlignment.center,
+              //                           crossAxisAlignment:
+              //                               CrossAxisAlignment.center,
+              //                           children: [
+              //                             SizedBox(
+              //                               height: 16,
+              //                             ),
+              //                             Text(
+              //                               'Rostdanham shu raqamlarga sms yuborilsinmi ?',
+              //                               style: appBarStyle.copyWith(
+              //                                   fontSize: 12),
+              //                               textAlign: TextAlign.center,
+              //                             ),
+              //                             SizedBox(
+              //                               height: 16,
+              //                             ),
+              //                           ],
+              //                         ),
+              //                         Row(
+              //                           mainAxisAlignment:
+              //                               MainAxisAlignment.spaceEvenly,
+              //                           children: [
+              //                             TextButton(
+              //                               onPressed: () async {
+              //                                 Get.back();
+              //                                 messageLoader2.value = true;
+              //
+              //                                 for (int i = 0;
+              //                                     i < selectedStudents.length;
+              //                                     i++) {
+              //                                   if (selectedStudents[i][
+              //                                               'isFreeOfcharge'] ==
+              //                                           false &&
+              //                                       hasDebtFromMonth(
+              //                                           selectedStudents[i]
+              //                                               ['payments'],
+              //                                           convertDateToMonthYear(
+              //                                               studentController
+              //                                                   .selectedStudyDate
+              //                                                   .value))) {
+              //                                     if (await Permission
+              //                                             .sms.isGranted &&
+              //                                         selectedStudents[i]
+              //                                                 ['phone']
+              //                                             .toString()
+              //                                             .isNotEmpty) {
+              //                                       _smsService.sendSMS(
+              //                                           selectedStudents[i]
+              //                                               ['phone'],
+              //                                           "Hurmatli ota-ona, "
+              //                                           "\nFarzandingiz ${selectedStudents[i]['surname'].toString().capitalizeFirst} ${selectedStudents[i]['name'].toString().capitalizeFirst!}ning ${getCurrentMonthInUzbek()} oylari uchun to'lovi oyning 5-sanasiga qadar to'lanishi kerak.");
+              //
+              //                                       _smsService.sendSMS(
+              //                                           selectedStudents[i]
+              //                                               ['phone'],
+              //                                           " Iltimos, to'lovni belgilangan muddatda amalga oshirishingizni so'raymiz.\nHurmat bilan Leader Acadey");
+              //                                     }
+              //                                   }
+              //                                 }
+              //
+              //                                 messageLoader2.value = false;
+              //                                 selectedStudents.clear();
+              //                                 isStudentChoosen.value = false;
+              //
+              //                                 Get.snackbar(
+              //                                   'Message', // Title
+              //                                   'Your message has been sent',
+              //                                   // Message
+              //                                   snackPosition:
+              //                                       SnackPosition.BOTTOM,
+              //                                   // Position of the snackbar
+              //                                   backgroundColor: Colors.green,
+              //                                   colorText: Colors.white,
+              //                                   borderRadius: 8,
+              //                                   margin: EdgeInsets.all(10),
+              //                                 );
+              //                               },
+              //                               child: Text(
+              //                                 'Confirm'.tr.capitalizeFirst!,
+              //                                 style: appBarStyle.copyWith(
+              //                                     color: Colors.green),
+              //                               ),
+              //                             ),
+              //                             TextButton(
+              //                                 onPressed: Get.back,
+              //                                 child: Text(
+              //                                   'Cancel',
+              //                                   style: appBarStyle.copyWith(
+              //                                       color: Colors.red),
+              //                                 )),
+              //                           ],
+              //                         )
+              //                       ],
+              //                     ),
+              //                   ),
+              //                 );
+              //               },
+              //             );
+              //           }
+              //         },
+              //         child: Obx(() => Container(
+              //               margin: EdgeInsets.only(left: 4),
+              //               child: CustomButton(
+              //                 color: Colors.red,
+              //                 text: messageLoader2.value
+              //                     ? "Sending..."
+              //                     : 'Payment',
+              //               ),
+              //             )),
+              //       ))
+              //     : SizedBox(),
+              // box.read('isLogged') == '0094'
+              //     ? Expanded(
+              //         child: InkWell(
+              //         onTap: () async {
+              //           if (selectedStudents.isEmpty) {
+              //             Get.snackbar(
+              //               'Error', // Title
+              //               'Students are not selected', // Message
+              //               snackPosition: SnackPosition.TOP,
+              //               // Position of the snackbar
+              //               backgroundColor: Colors.red,
+              //               colorText: Colors.white,
+              //               borderRadius: 8,
+              //               margin: EdgeInsets.all(10),
+              //             );
+              //           } else {
+              //             showDialog(
+              //               context: context,
+              //               builder: (BuildContext context) {
+              //                 return Dialog(
+              //                   backgroundColor: Colors.white,
+              //                   insetPadding:
+              //                       EdgeInsets.symmetric(horizontal: 16),
+              //                   shape: RoundedRectangleBorder(
+              //                       borderRadius: BorderRadius.circular(12.0)),
+              //                   //this right here
+              //                   child: Form(
+              //                     key: _formKey,
+              //                     child: Container(
+              //                       padding: EdgeInsets.all(16),
+              //                       decoration: BoxDecoration(
+              //                           color: Colors.white,
+              //                           borderRadius:
+              //                               BorderRadius.circular(12)),
+              //                       width: Get.width,
+              //                       height: Get.height / 2.5,
+              //                       child: Column(
+              //                         crossAxisAlignment:
+              //                             CrossAxisAlignment.start,
+              //                         mainAxisAlignment:
+              //                             MainAxisAlignment.spaceBetween,
+              //                         children: [
+              //                           Column(
+              //                             children: [
+              //                               SizedBox(
+              //                                 height: 16,
+              //                               ),
+              //                               TextFormField(
+              //                                 maxLines: 5,
+              //                                 controller: customMessage,
+              //                                 maxLength: 80,
+              //                                 keyboardType: TextInputType.text,
+              //                                 decoration: buildInputDecoratione(
+              //                                     'Your message here'
+              //                                             .tr
+              //                                             .capitalizeFirst! ??
+              //                                         ''),
+              //                               ),
+              //                               SizedBox(
+              //                                 height: 16,
+              //                               ),
+              //                             ],
+              //                           ),
+              //                           InkWell(
+              //                             onTap: () async {
+              //                               messageLoader3.value = true;
+              //                               if (customMessage.text.isNotEmpty) {
+              //                                 for (int i = 0;
+              //                                     i < selectedStudents.length;
+              //                                     i++) {
+              //                                   if (await Permission
+              //                                           .sms.isGranted &&
+              //                                       selectedStudents[i]['phone']
+              //                                           .toString()
+              //                                           .isNotEmpty) {
+              //                                     _smsService.sendSMS(
+              //                                         selectedStudents[i]
+              //                                             ['phone'],
+              //                                         customMessage.text +
+              //                                             "\nHurmat bilan Leader Acadey");
+              //                                   }
+              //
+              //                                   await Future.delayed(
+              //                                       Duration(seconds: 1));
+              //                                 }
+              //                                 messageLoader3.value = false;
+              //                                 customMessage.clear();
+              //                                 selectedStudents.clear();
+              //                                 isStudentChoosen.value = false;
+              //
+              //                                 Get.back();
+              //
+              //                                 Get.snackbar(
+              //                                   'Message', // Title
+              //                                   'Your message has been sent',
+              //                                   // Message
+              //                                   snackPosition:
+              //                                       SnackPosition.BOTTOM,
+              //                                   // Position of the snackbar
+              //                                   backgroundColor: Colors.blue,
+              //                                   colorText: Colors.white,
+              //                                   borderRadius: 8,
+              //                                   margin: EdgeInsets.all(10),
+              //                                 );
+              //                               } else {
+              //                                 Get.back();
+              //                               }
+              //                             },
+              //                             child: Obx(() => CustomButton(
+              //                                 isLoading: studentController
+              //                                     .isLoading.value,
+              //                                 text: messageLoader3.value
+              //                                     ? "Sending. . ."
+              //                                     : "Send"
+              //                                         .tr
+              //                                         .capitalizeFirst!)),
+              //                           )
+              //                         ],
+              //                       ),
+              //                     ),
+              //                   ),
+              //                 );
+              //               },
+              //             );
+              //           }
+              //         },
+              //         child: Container(
+              //           margin: EdgeInsets.only(left: 4),
+              //           child: CustomButton(
+              //             color: Colors.blue,
+              //             text: 'Custom',
+              //           ),
+              //         ),
+              //       ))
+              //     : SizedBox(),
             ],
           ),
         ),

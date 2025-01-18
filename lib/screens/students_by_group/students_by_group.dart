@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:leader/screens/students_by_group/students_by_group_homeworks.dart';
 import 'package:lottie/lottie.dart';
 
 import '../../constants/text_styles.dart';
@@ -18,10 +19,13 @@ class StudentsByGroup extends StatefulWidget {
   final String groupId;
   final String groupDocId;
   final String groupName;
+  final String subject;
 
   StudentsByGroup({
     required this.groupId,
-    required this.groupName, required this.groupDocId,
+    required this.subject,
+    required this.groupName,
+    required this.groupDocId,
   });
 
   @override
@@ -85,6 +89,7 @@ class _StudentsByGroupState extends State<StudentsByGroup>
               AddStudent(
                 groupName: widget.groupName,
                 groupId: widget.groupId,
+                subject: widget.subject,
               ),
               SizedBox(
                 width: 8,
@@ -114,58 +119,69 @@ class _StudentsByGroupState extends State<StudentsByGroup>
                   style: TextStyle(color: Colors.white),
                 )),
             Text(
-              'Imtihonlar',
+              'Vazifalar',
               style: TextStyle(color: Colors.white),
             ),
-            Text(
-              'Baholash',
-              style: TextStyle(color: Colors.white),
-            ),
+            Container(
+                alignment: Alignment.center,
+                width: Get.width / 2,
+                height: 50,
+                decoration: BoxDecoration(),
+                child: Text(
+                  'Imtihonlar',
+                  style: TextStyle(color: Colors.white),
+                )),
           ],
         ),
       ),
-      body: Obx(()=>Attendance.messageLoader.value
+      body: Obx(() => Attendance.messageLoader.value
           ? Container(
-        height: Get.height,
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-            color: Colors.white, borderRadius: BorderRadius.circular(12)),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              SizedBox(
-                height: Get.height / 12,
+              height: Get.height,
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                  color: Colors.white, borderRadius: BorderRadius.circular(12)),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    SizedBox(
+                      height: Get.height / 12,
+                    ),
+                    Lottie.asset('assets/lottie/mail_sending.json'),
+                    Text(
+                      'Smslar yuborilyapti , ozroq kuting...',
+                      style: appBarStyle.copyWith(fontSize: 16),
+                    ),
+                    SizedBox(
+                      height: Get.height / 3,
+                    )
+                  ],
+                ),
               ),
-              Lottie.asset('assets/lottie/mail_sending.json'),
-              Text(
-                'Smslar yuborilyapti , ozroq kuting...',
-                style: appBarStyle.copyWith(fontSize: 16),
-              ),
-              SizedBox(
-                height: Get.height / 3,
-              )
-            ],
-          ),
-        ),
-      )
+            )
           : TabBarView(
-        controller: _tabController,
-        children: [
-          Attendance(
-            groupId: widget.groupId,
-            groupName: widget.groupName, groupDocId: widget.groupDocId,
-          ),
-          Exams(
-            group: widget.groupName,
-            groupId: widget.groupId,
-          ),
-          GradingStudents(
-            group: widget.groupName,
-            groupId: widget.groupId,
-          ),
-        ],
-      )),
+              controller: _tabController,
+              children: [
+                Attendance(
+                  groupId: widget.groupId,
+                  groupName: widget.groupName,
+                  groupDocId: widget.groupDocId,
+                  subject: widget.subject,
+                ),
+                HomeWorks(
+                  groupId: widget.groupId,
+                  groupName: widget.groupName,
+                  groupDocId: widget.groupDocId,
+                  subject: widget.subject,
+                ),
+                Exams(
+                  groupId: widget.groupId,
+                  group: widget.groupName,
+                  subject: widget.subject,
+
+                ),
+              ],
+            )),
     );
   }
 }

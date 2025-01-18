@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:intl/intl.dart';
+import 'package:leader/screens/admin/students/selected_subject_card2.dart';
 
 import '../../../constants/custom_widgets/FormFieldDecorator.dart';
 import '../../../constants/custom_widgets/gradient_button.dart';
@@ -22,6 +23,7 @@ class AdminStudentPaymentHistory extends StatefulWidget {
   final List paidMonths;
   final String yeralyFee;
   final String paymentType;
+  final String subject;
 
   AdminStudentPaymentHistory({
     required this.uniqueId,
@@ -31,6 +33,7 @@ class AdminStudentPaymentHistory extends StatefulWidget {
     required this.paidMonths,
     required this.yeralyFee,
     required this.paymentType,
+    required this.subject,
   });
 
   @override
@@ -56,6 +59,18 @@ class _AdminStudentPaymentHistoryState extends State<AdminStudentPaymentHistory>
     }
 
     return total;
+  }
+
+  int getUniqueCode(List students) {
+    int code = 0;
+    for (var student in students) {
+      code += int.parse((student['items']['payments'].length).toString());
+    }
+    return code + 1;
+  }
+
+  TextEditingController paymentCode(List students) {
+    return TextEditingController(text: getUniqueCode(students).toString());
   }
 
   @override
@@ -117,50 +132,56 @@ class _AdminStudentPaymentHistoryState extends State<AdminStudentPaymentHistory>
                 return payments[0]['items']['payments'].isNotEmpty
                     ? Column(
                         children: [
-                          int.parse(widget.yeralyFee.removeAllWhitespace) != 0?
-                          ( int.parse(widget.yeralyFee.removeAllWhitespace) -
-                                      calculateTotalFee(
-                                          payments[0]['items']['payments']) ==
-                                  0
-                              ? CustomButton(text: "Yillik 100% to'langan") : Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Container(
-                                    padding: EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                        color: Colors.green,
-                                        borderRadius:
-                                            BorderRadius.circular(12)),
-                                    child: Row(
-                                      children: [
-                                        widget.paymentType == 'yearly'
-                                            ? Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    "Yillik to'lov miqdori: ${widget.yeralyFee} so'm",
-                                                    style: appBarStyle.copyWith(
-                                                        color: Colors.white,
-                                                        fontSize: 12),
-                                                  ),
-                                                  SizedBox(
-                                                    height: 4,
-                                                  ),
-                                                  Text(
-                                                    "To'lanishi kerak: ${int.parse(widget.yeralyFee.removeAllWhitespace) - calculateTotalFee(payments[0]['items']['payments'])} so'm",
-                                                    style: appBarStyle.copyWith(
-                                                        color: Colors.white,
-                                                        fontSize: 12),
-                                                  ),
-                                                ],
-                                              )
-                                            : SizedBox()
-                                      ],
-                                    ),
-                                  ),
-                                )):SizedBox()
-
-                              ,
+                          int.parse(widget.yeralyFee.removeAllWhitespace) != 0
+                              ? (int.parse(widget
+                                              .yeralyFee.removeAllWhitespace) -
+                                          calculateTotalFee(payments[0]['items']
+                                              ['payments']) ==
+                                      0
+                                  ? CustomButton(text: "Yillik 100% to'langan")
+                                  : Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Container(
+                                        padding: EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                            color: Colors.green,
+                                            borderRadius:
+                                                BorderRadius.circular(12)),
+                                        child: Row(
+                                          children: [
+                                            widget.paymentType == 'yearly'
+                                                ? Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        "Yillik to'lov miqdori: ${widget.yeralyFee} so'm",
+                                                        style: appBarStyle
+                                                            .copyWith(
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize: 12),
+                                                      ),
+                                                      SizedBox(
+                                                        height: 4,
+                                                      ),
+                                                      Text(
+                                                        "To'lanishi kerak: ${int.parse(widget.yeralyFee.removeAllWhitespace) - calculateTotalFee(payments[0]['items']['payments'])} so'm",
+                                                        style: appBarStyle
+                                                            .copyWith(
+                                                                color: Colors
+                                                                    .white,
+                                                                fontSize: 12),
+                                                      ),
+                                                    ],
+                                                  )
+                                                : SizedBox()
+                                          ],
+                                        ),
+                                      ),
+                                    ))
+                              : SizedBox(),
                           for (int i = 0;
                               i < payments[0]['items']['payments'].length;
                               i++)
@@ -187,6 +208,8 @@ class _AdminStudentPaymentHistoryState extends State<AdminStudentPaymentHistory>
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
+                                              "# ${payments[0]['items']['payments'][i]['paymentCode']}"),
+                                          Text(
                                             "To'lov qilingan sana: ",
                                             style: appBarStyle.copyWith(
                                                 fontSize: 10,
@@ -198,6 +221,12 @@ class _AdminStudentPaymentHistoryState extends State<AdminStudentPaymentHistory>
                                                 "${payments[0]['items']['payments'][i]['paidDate']}"),
                                             style: appBarStyle.copyWith(
                                                 color: Colors.blue,
+                                                fontSize: 12),
+                                          ),
+                                          Text(
+                                            "${payments[0]['items']['payments'][i]['subject']}",
+                                            style: TextStyle(
+                                                color: Colors.red,
                                                 fontSize: 12),
                                           ),
                                         ],
@@ -262,7 +291,7 @@ class _AdminStudentPaymentHistoryState extends State<AdminStudentPaymentHistory>
                                                                       .spaceBetween,
                                                               children: [
                                                                 Text(
-                                                                    "Edit course fee"),
+                                                                    "Tahrirlash"),
                                                                 TextFormField(
                                                                     inputFormatters: [
                                                                       ThousandSeparatorInputFormatter(),
@@ -275,7 +304,7 @@ class _AdminStudentPaymentHistoryState extends State<AdminStudentPaymentHistory>
                                                                             .payment,
                                                                     decoration:
                                                                         buildInputDecoratione(
-                                                                            'Price'),
+                                                                            "To'lov miqdori"),
                                                                     validator:
                                                                         (value) {
                                                                       if (value!
@@ -296,7 +325,7 @@ class _AdminStudentPaymentHistoryState extends State<AdminStudentPaymentHistory>
                                                                           .paymentComment,
                                                                   decoration:
                                                                       buildInputDecoratione(
-                                                                          'Comment'),
+                                                                          "To'lov kodi"),
                                                                   // validator:
                                                                   //     (value) {
                                                                   //   if (value!
@@ -310,7 +339,7 @@ class _AdminStudentPaymentHistoryState extends State<AdminStudentPaymentHistory>
                                                                   children: [
                                                                     Obx(
                                                                       () => Text(
-                                                                          'Paid date:  ${studentController.paidDate.value}'),
+                                                                          'To\'lov sanasi:  ${studentController.paidDate.value}'),
                                                                     ),
                                                                     IconButton(
                                                                         onPressed:
@@ -350,7 +379,7 @@ class _AdminStudentPaymentHistoryState extends State<AdminStudentPaymentHistory>
                                                                       isLoading: studentController
                                                                           .isLoading
                                                                           .value,
-                                                                      text: 'Edit'
+                                                                      text: 'Tahrirlash'
                                                                           .tr
                                                                           .capitalizeFirst!)),
                                                                 )
@@ -440,6 +469,9 @@ class _AdminStudentPaymentHistoryState extends State<AdminStudentPaymentHistory>
           color: Colors.white,
         ),
         onPressed: () {
+          SelectedSubjectCard2.selectedSubject.value = "";
+          studentController.paidDate.value = "";
+          studentController.payment.clear();
           showDialog(
             context: context,
             builder: (BuildContext context) {
@@ -457,7 +489,7 @@ class _AdminStudentPaymentHistoryState extends State<AdminStudentPaymentHistory>
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12)),
                     width: Get.width,
-                    height: Get.height / 1.8,
+                    height: Get.height / 1.4,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -483,18 +515,37 @@ class _AdminStudentPaymentHistoryState extends State<AdminStudentPaymentHistory>
                               }
                               return null;
                             }),
-                        TextFormField(
-                          keyboardType: TextInputType.text,
+                        StreamBuilder(
+                            stream: FirebaseFirestore.instance
+                                .collection('LeaderStudents')
+                                .snapshots(),
+                            builder: (context,
+                                AsyncSnapshot<QuerySnapshot> snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return Text("Kod yaratyapmiz");
+                              }
+                              if (snapshot.hasError) {
+                                return Center(
+                                    child: Text('Error: ${snapshot.error}'));
+                              }
+                              if (snapshot.hasData) {
+                                List students = snapshot.data!.docs;
+                                studentController.setCode(
+                                    getUniqueCode(students).toString());
+                                return TextFormField(
+                                  keyboardType: TextInputType.number,
+                                  controller: studentController.paymentComment,
+                                  decoration:
+                                      buildInputDecoratione("To'lov kodi"),
+                                );
+                              }
+                              // If no data available
 
-                          controller: studentController.paymentComment,
-                          decoration: buildInputDecoratione("To'lov kodi"),
-                          // validator: (value) {
-                          //   if (value!.isEmpty) {
-                          //     return "Maydonlar bo'sh bo'lmasligi kerak";
-                          //   }
-                          //   return null;
-                          // },
-                        ),
+                              else {
+                                return Text('No data'); // No data available
+                              }
+                            }),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.start,
                           children: [
@@ -570,18 +621,99 @@ class _AdminStudentPaymentHistoryState extends State<AdminStudentPaymentHistory>
                                 icon: Icon(Icons.calendar_month))
                           ],
                         ),
-                        InkWell(
-                          onTap: () {
-                            if (_formKey.currentState!.validate() &&
-                                studentController.paidDate.value.isNotEmpty) {
-                              studentController.addPayment(
-                                  widget.id, studentController.paidDate.value);
-                            }
-                          },
-                          child: Obx(() => CustomButton(
-                              isLoading: studentController.isLoading.value,
-                              text: 'confirm'.tr.capitalizeFirst!)),
-                        )
+                        Container(
+                          height: 40,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                for (var item in generateMonths())
+                                  InkWell(
+                                    onTap: () {
+                                      studentController.paidDate.value = item;
+                                    },
+                                    child: Obx(() => Container(
+                                          padding: EdgeInsets.all(8),
+                                          margin: EdgeInsets.only(right: 4),
+                                          decoration: BoxDecoration(
+                                              border: Border.all(
+                                                  color: Colors.grey, width: 1),
+                                              color: studentController
+                                                          .paidDate.value ==
+                                                      item
+                                                  ? Colors.green
+                                                  : Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(12)),
+                                          child: Text(
+                                            convertDateToMonthYear(item),
+                                            style: TextStyle(
+                                              color: studentController
+                                                          .paidDate.value ==
+                                                      item
+                                                  ? Colors.white
+                                                  : Colors.black,
+                                            ),
+                                          ),
+                                        )),
+                                  )
+                              ],
+                            ),
+                          ),
+                        ),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: [
+                              SelectedSubjectCard2(subject: "Matematika"),
+                              SelectedSubjectCard2(subject: "Fizika"),
+                              SelectedSubjectCard2(subject: "Rus tili"),
+                              SelectedSubjectCard2(subject: "Ona tili"),
+                              SelectedSubjectCard2(subject: "Tarix"),
+                              SelectedSubjectCard2(subject: "Ingliz tili"),
+                            ],
+                          ),
+                        ),
+                        Obx(() => SelectedSubjectCard2
+                                    .selectedSubject.value.isEmpty &&
+                                widget.subject.isEmpty
+                            ? InkWell(
+                                onTap: () {
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(SnackBar(
+                                    content: Text('Bazi maydonlar tanlanmagan'
+                                        .tr
+                                        .capitalizeFirst!),
+                                    backgroundColor: Colors.red,
+                                    dismissDirection:
+                                        DismissDirection.startToEnd,
+                                  ));
+                                },
+                                child: CustomButton(
+                                    isLoading: false,
+                                    color: Colors.grey,
+                                    text: 'Tasdiqlash'.tr.capitalizeFirst!),
+                              )
+                            : InkWell(
+                                onTap: () {
+                                  if (_formKey.currentState!.validate() &&
+                                      studentController
+                                          .paidDate.value.isNotEmpty) {
+                                    studentController.addPayment(
+                                        widget.id,
+                                        studentController.paidDate.value,
+                                        widget.subject.isEmpty
+                                            ? SelectedSubjectCard2
+                                                .selectedSubject.value
+                                            : widget.subject);
+                                  }
+                                },
+                                child: Obx(() => CustomButton(
+                                    isLoading:
+                                        studentController.isLoading.value,
+                                    text: 'Tasdiqlash'.tr.capitalizeFirst!)),
+                              ))
                       ],
                     ),
                   ),

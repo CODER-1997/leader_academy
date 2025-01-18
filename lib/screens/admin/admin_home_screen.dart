@@ -6,7 +6,7 @@ import 'package:get/get_core/src/get_main.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:leader/screens/admin/groups/groups.dart';
 import 'package:leader/screens/admin/statistics/monthly_statistics/monthly_statistics.dart';
-import 'package:leader/screens/admin/statistics/statistics.dart';
+import 'package:leader/screens/admin/statistics/statistics/statistics.dart';
 import 'package:leader/screens/admin/students/students.dart';
 import 'package:leader/screens/admin/teachers/teachers.dart';
 import 'package:upgrader/upgrader.dart';
@@ -30,20 +30,21 @@ class AdminHomeScreen extends StatelessWidget {
             child: Container(
               height: Get.height,
               // padding: EdgeInsets.only(left: 16,right: 16,top: 16),
-              child: box.read('isLogged') == '0094'  ? [
+              child: box.read('isLogged') == '0094' ||box.read('isLogged') == '004422'  ? [
                 AdminGroups(),
-                AdminStudents(),
+                AdminStudents( ),
                 Teachers(),
                 MonthlyStatistics(),
                 Statistics(),
               ].obs[currentIndex.value]: [
                 AdminGroups(),
-                AdminStudents(),
+                AdminStudents( ),
 
               ].obs[currentIndex.value],
             ),
           ),
-          bottomNavigationBar:box.read('isLogged') == '0094'  ? BottomNavigationBar(
+          bottomNavigationBar:box.read('isLogged') == '0094' ||box.read('isLogged') == '004422' ?
+          BottomNavigationBar(
 
             backgroundColor: Colors.white,
             selectedItemColor: Colors.blueAccent,

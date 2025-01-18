@@ -3,19 +3,22 @@ class ExamModel {
   final String group;
   final String questionNums;
   final String date;
-  final bool isCefr;
+  final bool isTestType;
+  final bool isWarned;
 
 
 
 
 
 
-  ExamModel(  {
+
+  ExamModel(    {
     required this.name,
     required this.group,
     required this.questionNums,
     required this.date,
-    required this.isCefr,
+    required this.isTestType,
+    required this.isWarned,
 
 
 
@@ -28,7 +31,8 @@ class ExamModel {
       'questionNums': questionNums,
       'date': date,
       'group': group,
-      'isCefr': isCefr,
+      'isTestType': isTestType,
+      'isWarned': isWarned,
 
     };
   }

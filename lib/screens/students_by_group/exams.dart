@@ -15,8 +15,13 @@ import '../../../constants/custom_widgets/gradient_button.dart';
 class Exams extends StatelessWidget {
   final String group;
   final String groupId;
+  final String subject;
 
-  Exams({required this.group, required this.groupId});
+  Exams({
+    required this.group,
+    required this.groupId,
+    required this.subject,
+  });
 
   final _formKey = GlobalKey<FormState>();
 
@@ -46,193 +51,226 @@ class Exams extends StatelessWidget {
                 var exams = snapshot.data!.docs;
 
                 return exams.isNotEmpty
-                    ?
+                    ? ListView.builder(
+                        itemCount: exams.length,
+                        itemBuilder: (context, index) {
+                          var exam = exams[index];
+                          return GestureDetector(
+                            onTap: () {
+                              if (box.read('exam_text') == null) {
+                                box.write('exam_text',
+                                    "Farzandingiz #ismi #fam #fan #guruh imtihonidan #foiz oldi . #sana");
+                              }
+                              if (exam['items']['isCefr'] == true) {
+                                Get.to(Cefr(
+                                  groupId: groupId,
+                                  groupName: group,
+                                  examTitle: exam['items']['name'],
+                                  examCount: exam['items']['questionNums'],
+                                  examDate: exam['items']['date'],
+                                ));
+                              } else {
+                                Get.to(ExamResults(
+                                  groupId: groupId,
+                                  groupName: group,
+                                  examTitle: exam['items']['name'],
+                                  examCount: exam['items']['questionNums'],
+                                  examDate: exam['items']['date'],
+                                  subject: subject,
+                                  isTestTypeExam: exam['items']['isTestType'],
+                                  examDocId: exam.id,
+                                ));
+                              }
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12)),
+                              margin: EdgeInsets.all(4),
+                              child: ListTile(
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    InkWell(
+                                        onTap: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (BuildContext context) {
+                                              examController.setValues(
+                                                exam['items']['name'],
+                                                exam['items']['questionNums'],
+                                              );
 
-                ListView.builder(
-                  itemCount: exams.length,
-                  itemBuilder: (context, index) {
-                    var exam  = exams[index];
-                    return   GestureDetector(
-                      onTap: () {
-                        if (exam['items']['isCefr']== true) {
-                          Get.to(Cefr(
-                            groupId: groupId,
-                            groupName: group,
-                            examTitle: exam['items']['name'],
-                            examCount: exam['items']['questionNums'],
-                            examDate: exam['items']['date'],
-                          ));
-                        } else {
-                          Get.to(ExamResults(
-                            groupId: groupId,
-                            groupName: group,
-                            examTitle: exam['items']['name'],
-                            examCount: exam['items']['questionNums'],
-                            examDate: exam['items']['date'],
-                          ));
-                        }
-                      },
-                      child: Container(
-                        decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12)),
-                        margin: EdgeInsets.all(4),
-                        child: ListTile(
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              InkWell(
-                                  onTap: () {
-                                    showDialog(
-                                      context: context,
-                                      builder: (BuildContext context) {
-                                        examController.setValues(
-                                          exam['items']['name'],
-                                          exam['items']['questionNums'],
-                                        );
+                                              return Dialog(
+                                                backgroundColor: Colors.white,
+                                                insetPadding:
+                                                    EdgeInsets.symmetric(
+                                                        horizontal: 16),
 
-                                        return Dialog(
-                                          backgroundColor: Colors.white,
-                                          insetPadding:
-                                          EdgeInsets.symmetric(
-                                              horizontal: 16),
-
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                              BorderRadius.circular(
-                                                  12.0)),
-                                          //this right here
-                                          child: Form(
-                                            key: _formKey,
-                                            child: Container(
-                                              padding:
-                                              EdgeInsets.all(16),
-                                              decoration: BoxDecoration(
-                                                  color: Colors.white,
-                                                  borderRadius:
-                                                  BorderRadius
-                                                      .circular(
-                                                      12)),
-                                              width: Get.width,
-                                              height: exam['items']['isCefr']== true ? Get.height/3.8: Get.height / 2.2,
-                                              child: Column(
-                                                mainAxisAlignment:
-                                                MainAxisAlignment
-                                                    .spaceBetween,
-                                                children: [
-                                                  Column(
-                                                    children: [
-                                                      Text(
-                                                          "Tahrirlash"),
-                                                      SizedBox(
-                                                        height: 16,
-                                                      ),
-                                                      SizedBox(
-                                                        child:
-                                                        TextFormField(
-                                                            decoration:
-                                                            buildInputDecoratione(
-                                                                ''),
-                                                            controller:
-                                                            examController
-                                                                .examEdit,
-                                                            keyboardType:
-                                                            TextInputType
-                                                                .text,
-                                                            validator:
-                                                                (value) {
-                                                              if (value!
-                                                                  .isEmpty) {
-                                                                return "Maydonlar bo'sh bo'lmasligi kerak";
-                                                              }
-                                                              return null;
-                                                            }),
-                                                      ),
-                                                      SizedBox(
-                                                        height: 16,
-                                                      ),
-                                                      exam['items']['isCefr']  ==true ? SizedBox():  TextFormField(
-                                                          decoration:
-                                                          buildInputDecoratione(
-                                                              ''),
-                                                          controller:
-                                                          examController
-                                                              .examQuestionCountEdit,
-                                                          keyboardType:
-                                                          TextInputType
-                                                              .number,
-                                                          validator:
-                                                              (value) {
-                                                            if (value!
-                                                                .isEmpty) {
-                                                              return "Maydonlar bo'sh bo'lmasligi kerak";
+                                                shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            12.0)),
+                                                //this right here
+                                                child: Form(
+                                                  key: _formKey,
+                                                  child: Container(
+                                                    padding: EdgeInsets.all(16),
+                                                    decoration: BoxDecoration(
+                                                        color: Colors.white,
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(12)),
+                                                    width: Get.width,
+                                                    height: exam['items']
+                                                                ['isCefr'] ==
+                                                            true
+                                                        ? Get.height / 3.8
+                                                        : Get.height / 2.2,
+                                                    child: Column(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        Column(
+                                                          children: [
+                                                            Text("Tahrirlash"),
+                                                            SizedBox(
+                                                              height: 16,
+                                                            ),
+                                                            SizedBox(
+                                                              child:
+                                                                  TextFormField(
+                                                                      decoration:
+                                                                          buildInputDecoratione(
+                                                                              ''),
+                                                                      controller:
+                                                                          examController
+                                                                              .examEdit,
+                                                                      keyboardType:
+                                                                          TextInputType
+                                                                              .text,
+                                                                      validator:
+                                                                          (value) {
+                                                                        if (value!
+                                                                            .isEmpty) {
+                                                                          return "Maydonlar bo'sh bo'lmasligi kerak";
+                                                                        }
+                                                                        return null;
+                                                                      }),
+                                                            ),
+                                                            SizedBox(
+                                                              height: 16,
+                                                            ),
+                                                            exam['items'][
+                                                                        'isCefr'] ==
+                                                                    true
+                                                                ? SizedBox()
+                                                                : TextFormField(
+                                                                    decoration:
+                                                                        buildInputDecoratione(
+                                                                            ''),
+                                                                    controller:
+                                                                        examController
+                                                                            .examQuestionCountEdit,
+                                                                    keyboardType:
+                                                                        TextInputType
+                                                                            .number,
+                                                                    validator:
+                                                                        (value) {
+                                                                      if (value!
+                                                                          .isEmpty) {
+                                                                        return "Maydonlar bo'sh bo'lmasligi kerak";
+                                                                      }
+                                                                      return null;
+                                                                    }),
+                                                            SizedBox(
+                                                              height: 16,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        InkWell(
+                                                          onTap: () {
+                                                            if (_formKey
+                                                                .currentState!
+                                                                .validate()) {
+                                                              examController
+                                                                  .editExam(exam
+                                                                      .id
+                                                                      .toString());
                                                             }
-                                                            return null;
-                                                          }),
-                                                      SizedBox(
-                                                        height: 16,
-                                                      ),
-                                                    ],
+                                                          },
+                                                          child: Obx(() => CustomButton(
+                                                              isLoading:
+                                                                  examController
+                                                                      .isLoading
+                                                                      .value,
+                                                              text:
+                                                                  "Tahrirlash")),
+                                                        )
+                                                      ],
+                                                    ),
                                                   ),
-                                                  InkWell(
-                                                    onTap: () {
-                                                      if (_formKey
-                                                          .currentState!
-                                                          .validate()) {
-                                                        examController
-                                                            .editExam(exam
-                                                            .id
-                                                            .toString());
-                                                      }
-                                                    },
-                                                    child: Obx(() => CustomButton(
-                                                        isLoading:
-                                                        examController
-                                                            .isLoading
-                                                            .value,
-                                                        text:
-                                                        "Tahrirlash")),
-                                                  )
-                                                ],
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                        child: Icon(Icons.edit)),
+                                    IconButton(
+                                        onPressed: () {
+                                          Get.defaultDialog(
+                                            title: "O'chirish",
+                                            middleText:
+                                                "Rostdanham o'chirilsinmi ?",
+                                            textCancel: "Yoq",
+                                            textConfirm: "Ha",
+                                            confirmTextColor: Colors.white,
+                                            onConfirm: () {
+                                              examController
+                                                  .deleteExam(exam.id);
+                                            },
+                                            onCancel: () {},
+                                          );
+                                        },
+                                        icon: Icon(
+                                          Icons.delete,
+                                          color: Colors.red,
+                                        )),
+                                  ],
+                                ),
+                                title: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text('${exam['items']['name']}'),
+                                    exam['items']['isWarned'] == true
+                                        ? Row(
+                                          children: [
+                                            Text(
+                                                "Ogohlantirilgan",
+                                                style: TextStyle(
+                                                    color: Colors.green,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w900),
                                               ),
-                                            ),
-                                          ),
-                                        );
-                                      },
-                                    );
-                                  },
-                                  child: Icon(Icons.edit)),
-                              IconButton(
-                                  onPressed: () {
-                                    Get.defaultDialog(
-                                      title: "O'chirish",
-                                      middleText:
-                                      "Rostdanham o'chirilsinmi ?",
-                                      textCancel: "Yoq",
-                                      textConfirm: "Ha",
-                                      confirmTextColor: Colors.white,
-                                      onConfirm: () {
-                                        examController
-                                            .deleteExam(exam.id);
-                                      },
-                                      onCancel: () {
-                                      },
-                                    );
-                                  },
-                                  icon: Icon(
-                                    Icons.delete,
-                                    color: Colors.red,
-                                  ))
-                            ],
-                          ),
-                          title: Text('${exam['items']['name']}'),
-                        ),
-                      ),
-                    );
-                  },
-                )
-
-
+                                            exam['items']['warnedTime']!=null  ?
+                                            Text(
+                                              "   (${ exam['items']['warnedTime']})",
+                                              style: TextStyle(
+                                                  color: Colors.red,
+                                                  fontSize: 8,
+                                                  fontWeight: FontWeight.w900),
+                                            ):SizedBox()
+                                          ],
+                                        )
+                                        : SizedBox()
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      )
                     : Emptiness(title: 'Hali imtihonlar yo\'q');
               }
               // If no data available
@@ -243,7 +281,7 @@ class Exams extends StatelessWidget {
             }),
       ),
       floatingActionButtonLocation:
-      FloatingActionButtonLocation.miniCenterFloat,
+          FloatingActionButtonLocation.miniCenterFloat,
       floatingActionButton: AddExams(group: group),
     );
   }

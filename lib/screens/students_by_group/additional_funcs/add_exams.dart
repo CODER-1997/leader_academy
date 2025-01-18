@@ -43,7 +43,7 @@ class AddExams extends StatelessWidget {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12)),
                     width: Get.width,
-                    height:examController.isCefrExam.value ? Get.height/3 : Get.height / 2.5,
+                    height:examController.isTestTypeExam.value  == false? Get.height/3 : Get.height / 2.5,
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -59,25 +59,51 @@ class AddExams extends StatelessWidget {
                               children: [
                                 Obx(() => GestureDetector(
                                   onTap: () {
-                                    examController.isCefrExam.value =
-                                    !examController.isCefrExam.value;
+                                    examController.isTestTypeExam.value =  true;
                                   },
                                   child: Container(
                                     width: 100,
                                     padding: EdgeInsets.all(4),
                                     alignment: Alignment.center,
                                     decoration: BoxDecoration(
-                                        color: examController.isCefrExam.value
+                                        color: examController.isTestTypeExam.value
                                             ? Colors.green
                                             : Colors.white,
                                         borderRadius: BorderRadius.circular(12),
                                         border: Border.all(
                                             color: Colors.grey, width: 1)),
                                     child: Text(
-                                      'CEFR',
+                                      'TEST',
                                       style: TextStyle(
                                           color:
-                                          examController.isCefrExam.value
+                                          examController.isTestTypeExam.value
+                                              ? Colors.white
+                                              : Colors.black),
+                                    ),
+                                  ),
+                                )),
+                                SizedBox(width: 16,),
+                                Obx(() => GestureDetector(
+                                  onTap: () {
+                                    examController.isTestTypeExam.value =
+                                   false;
+                                  },
+                                  child: Container(
+                                    width: 100,
+                                    padding: EdgeInsets.all(4),
+                                    alignment: Alignment.center,
+                                    decoration: BoxDecoration(
+                                        color: examController.isTestTypeExam.value == false
+                                            ? Colors.green
+                                            : Colors.white,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                            color: Colors.grey, width: 1)),
+                                    child: Text(
+                                      'YOZMA',
+                                      style: TextStyle(
+                                          color:
+                                          examController.isTestTypeExam.value == false
                                               ? Colors.white
                                               : Colors.black),
                                     ),
@@ -98,10 +124,10 @@ class AddExams extends StatelessWidget {
                                   }
                                   return null;
                                 }),
-                            examController.isCefrExam.value == false ?  SizedBox(
+                            examController.isTestTypeExam.value == true ?  SizedBox(
                               height: 16,
                             ):SizedBox(),
-                            examController.isCefrExam.value == false ? TextFormField(
+                            examController.isTestTypeExam.value == true ? TextFormField(
                                 controller: examController.examQuestionCount,
                                 keyboardType: TextInputType.number,
                                 decoration:
@@ -112,7 +138,7 @@ class AddExams extends StatelessWidget {
                                   }
                                   return null;
                                 }):SizedBox(),
-                            examController.isCefrExam.value == false ?  SizedBox(
+                            examController.isTestTypeExam.value == false ?  SizedBox(
                               height: 16,
                             ):SizedBox(),
                           ],

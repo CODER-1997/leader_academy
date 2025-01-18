@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:leader/screens/admin/teachers/teacherInfo.dart';
 import '../../../constants/custom_widgets/FormFieldDecorator.dart';
 import '../../../constants/custom_widgets/custom_dialog.dart';
@@ -25,6 +26,7 @@ class _TeachersState extends State<Teachers> {
   StudentController studentController = Get.put(StudentController());
 
   String _searchText = '';
+  GetStorage box = GetStorage();
 
   @override
   Widget build(BuildContext context) {
@@ -33,8 +35,8 @@ class _TeachersState extends State<Teachers> {
         appBar: AppBar(
           backgroundColor: dashBoardColor,
           toolbarHeight: 64,
-          actions: [
-            Padding(
+          actions:  [
+            box.read('isLogged') == '004422' ? Padding(
               padding: const EdgeInsets.only(
                 right: 16,
               ),
@@ -84,7 +86,7 @@ class _TeachersState extends State<Teachers> {
                                               children: [
                                                 SizedBox(),
                                                 Text(
-                                                  "Add Teacher",
+                                                  "Ustoz yaratish",
                                                   style: appBarStyle.copyWith(
                                                       fontSize: 14),
                                                 ),
@@ -108,7 +110,7 @@ class _TeachersState extends State<Teachers> {
                                           teachersController.TeacherName,
                                           keyboardType: TextInputType.text,
                                           decoration: buildInputDecoratione(
-                                              'Teacher name'),
+                                              "Ustoz ismi"),
                                           validator: (value) {
                                             if (value!.isEmpty) {
                                               return "Maydonlar bo'sh bo'lmasligi kerak";
@@ -123,7 +125,7 @@ class _TeachersState extends State<Teachers> {
                                           teachersController.TeacherSurname,
                                           keyboardType: TextInputType.text,
                                           decoration: buildInputDecoratione(
-                                              'Teacher surname'),
+                                              'Ustoz familiyasi'),
                                           validator: (value) {
                                             if (value!.isEmpty) {
                                               return "Maydonlar bo'sh bo'lmasligi kerak";
@@ -134,7 +136,7 @@ class _TeachersState extends State<Teachers> {
                                         height: 16,
                                       ),
                                       Text(
-                                        'Append Group(s)',
+                                        'Guruh biriktirish',
                                         style:
                                         appBarStyle.copyWith(fontSize: 16),
                                       ),
@@ -222,7 +224,7 @@ class _TeachersState extends State<Teachers> {
                                     child: Obx(() => CustomButton(
                                         isLoading:
                                         teachersController.isLoading.value,
-                                        text: "Add")),
+                                        text: "Qo'shish")),
                                   )
                                 ],
                               ),
@@ -233,8 +235,8 @@ class _TeachersState extends State<Teachers> {
                     );
                   },
                   icon: Icon(Icons.add),
-                  label: Text("Add Teacher")),
-            ),
+                  label: Text("Ustoz yaratish")),
+            ):SizedBox(),
 
           ],
         ),
@@ -244,7 +246,7 @@ class _TeachersState extends State<Teachers> {
             child: Column(
               children: [
                 TextField(
-                  decoration: buildInputDecoratione('Search teachers'),
+                  decoration: buildInputDecoratione('Qidirish'),
                   onChanged: (value) {
                     setState(() {
                       _searchText = value.toLowerCase();
@@ -280,9 +282,23 @@ class _TeachersState extends State<Teachers> {
                             for (int i = 0; i < teachers.length; i++)
                               InkWell(
                                 onTap: () {
-                                  Get.to(Teacherinfo(
-                                    documentId: teachers[i].id,
-                                  ));
+                                  if(box.read('isLogged') == '004422'){
+                                    Get.to(Teacherinfo(
+                                      documentId: teachers[i].id,
+                                    ));
+                                  }
+                                  else {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(SnackBar(
+                                      content: Text('Sizga ruxsat yoq'
+                                          .tr
+                                          .capitalizeFirst!),
+                                      backgroundColor: Colors.green,
+                                      dismissDirection:
+                                      DismissDirection.startToEnd,
+                                    ));
+                                  }
+
                                 },
                                 child: Container(
                                   margin: EdgeInsets.all(2),
@@ -329,7 +345,7 @@ class _TeachersState extends State<Teachers> {
                                           )
                                         ],
                                       ),
-                                      Row(
+                                  box.read("isLogged") == "004422"?    Row(
                                         children: [
                                           SizedBox(
                                             width: 16,
@@ -406,7 +422,7 @@ class _TeachersState extends State<Teachers> {
                                                                     MainAxisAlignment.center,
                                                                     children: [
                                                                       Text(
-                                                                        "Edit",
+                                                                        "Tahrirlash",
                                                                         style: appBarStyle,
                                                                       ),
                                                                     ],
@@ -446,7 +462,7 @@ class _TeachersState extends State<Teachers> {
                                                                     16,
                                                                   ),
                                                                   Text(
-                                                                    'Edit Group(s)',
+                                                                    'Tahrirlash',
                                                                     style:
                                                                     appBarStyle,
                                                                   ),
@@ -511,7 +527,7 @@ class _TeachersState extends State<Teachers> {
                                                                         .isLoading
                                                                         .value,
                                                                     text:
-                                                                    "Edit")),
+                                                                    "Tahrirlash")),
                                                               )
                                                             ],
                                                           ),
@@ -530,9 +546,9 @@ class _TeachersState extends State<Teachers> {
                                                   context) {
                                                     return CustomAlertDialog(
                                                       title:
-                                                      "Delete Teacher",
+                                                      "Ustozni o'chirish",
                                                       description:
-                                                      "Are you sure you want to delete this teacher ?",
+                                                      "Rostdanham o'chirasizmi",
                                                       onConfirm:
                                                           () async {
                                                         // Perform delete action here
@@ -553,7 +569,7 @@ class _TeachersState extends State<Teachers> {
                                                 color: Colors.red,
                                               ))
                                         ],
-                                      )
+                                      ):SizedBox()
                                     ],
                                   ),
                                 ),
@@ -571,7 +587,7 @@ class _TeachersState extends State<Teachers> {
                                 width: 122,
                               ),
                               Text(
-                                'Our center has not any teachers ',
+                                'Ustozlar mavjud emas',
                                 style: TextStyle(
                                     color: Colors.black, fontSize: 12),
                               ),

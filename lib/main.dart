@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:leader/screens/admin/admin_home_screen.dart';
 import 'package:leader/screens/auth/login.dart';
 import 'package:leader/screens/home/home_screen.dart';
@@ -32,7 +33,7 @@ void main() async {
   FirebaseFirestore.instance.settings = Settings(persistenceEnabled: true);
   await Upgrader.clearSavedSettings();
 
-  runApp(const MyApp());
+  initializeDateFormatting().then((_) => runApp(const MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -125,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Container(
         child: box.read('isLogged') == null
             ? Login()
-            : (box.read('isLogged') == '0094' || box.read('isLogged') == '1105' ? AdminHomeScreen():HomeScreen()),
+            : (box.read('isLogged') == '0094' || box.read('isLogged') == '004422' ? AdminHomeScreen():HomeScreen()),
       ),
     );
   }

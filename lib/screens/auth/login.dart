@@ -25,14 +25,14 @@ class Login extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xff123778), Color(0xff123778)],
+            colors: [Color(0xff000000), Color(0xff000000)],
           ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Image.asset('assets/logo.png'),
+            Image.asset('assets/logo.png',color: Colors.white,),
 
             Text(
               'Login',
@@ -64,7 +64,7 @@ class Login extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                if(auth.teacherId.text == '0094' || auth.teacherId.text == '1105'){
+                if(auth.teacherId.text == '0094' || auth.teacherId.text == '004422'){
                   box.write('isLogged', auth.teacherId.text);
                   Get.offAll(AdminHomeScreen());
                 }

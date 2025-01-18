@@ -119,6 +119,7 @@ class Grading extends StatelessWidget {
                         'surname': list[i]['items']['surname'],
                        });
                     }
+                    students .sort((a, b) => (a['surname']).compareTo(b['surname']));
 
                     return students.length != 0
                         ? Obx(() => Column(

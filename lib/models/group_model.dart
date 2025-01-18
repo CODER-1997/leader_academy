@@ -4,6 +4,7 @@ class GroupModel {
   final String warnedDay;
   final String docId;
   final String smsSentDate;
+  final String subject;
   final int order;
 
 
@@ -16,6 +17,7 @@ class GroupModel {
     required this.warnedDay,
     required this.docId,
     required this.smsSentDate,
+    required this.subject,
 
 
   });
@@ -29,6 +31,7 @@ class GroupModel {
       'warnedDay': warnedDay,
       'docId': docId,
       'smsSentDate': smsSentDate,
+      'subject': subject,
 
 
     };

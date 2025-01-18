@@ -1,4 +1,6 @@
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:leader/constants/custom_widgets/custom_dialog.dart';
 import 'package:pdf/pdf.dart';
 
 String generateUniqueId() {
@@ -114,7 +116,8 @@ String checkStatus(List studyDays, String day, String groupId) {
   // Parse the date string into a DateTime object
   bool isChecked = false;
   for (int i = 0; i < studyDays.length; i++) {
-    if (studyDays[i]['studyDay'] == day.toString() && studyDays[i]['groupId'] == groupId) {
+    if (studyDays[i]['studyDay'] == day.toString() &&
+        studyDays[i]['groupId'] == groupId) {
       isChecked = true;
       index = i;
       break;
@@ -172,7 +175,8 @@ int calculateTotalFee(List payments) {
 
   return total;
 }
-String getReason(List list, String day,String groupId) {
+
+String getReason(List list, String day, String groupId) {
   var result = "";
   var holat = false;
   var index = 0;
@@ -233,28 +237,43 @@ bool isCurrentMonth(String monthYear) {
   return inputMonth == currentMonth && inputYear == currentYear;
 }
 
-List calculateUnpaidMonths(List studyDays, List payments) {
+List calculateUnpaidMonths(List studyDays, List payments, String subject) {
+  print("$payments");
   var studyMonths = [];
   var paidMonths = [];
   var shouldPay = [];
 
   for (int i = 0; i < studyDays.length; i++) {
     if (!studyMonths
-        .contains(convertDateToMonthYear(studyDays[i]['studyDay']))) {
-      studyMonths.add(convertDateToMonthYear(studyDays[i]['studyDay']));
+        .contains(
+      convertDateToMonthYear(studyDays[i]['studyDay']).toString().removeAllWhitespace + "#" +  studyDays[i]['subject'],
+    )) {
+      studyMonths.add(
+        convertDateToMonthYear(studyDays[i]['studyDay']).toString().removeAllWhitespace + "#" +  studyDays[i]['subject'],
+
+      );
     }
   }
+
   for (int i = 0; i < payments.length; i++) {
-    if (!paidMonths.contains(convertDateToMonthYear(payments[i]['paidDate']))) {
-      paidMonths.add(convertDateToMonthYear(payments[i]['paidDate']));
+    if (!paidMonths.contains({
+       convertDateToMonthYear(payments[i]['paidDate']).toString().removeAllWhitespace + "#"+
+       payments[i]['subject']
+    })) {
+      paidMonths.add(convertDateToMonthYear(payments[i]['paidDate']) .toString().removeAllWhitespace+ "#"+
+          payments[i]['subject']);
     }
   }
-  for (int i = 0; i < studyMonths.length; i++) {
-    var month = studyMonths[i];
-    if (!paidMonths.contains(month)) {
-      shouldPay.add(month);
-    }
+  print("pay days" + paidMonths.toString());
+  print("sss" + studyMonths.toString());
+
+  for(int i = 0;i< studyMonths.length;i++){
+     if(!paidMonths.contains(studyMonths[i])){
+       shouldPay.add(studyMonths[i]);
+     }
+
   }
+  print("Should pay" + shouldPay.toString());
 
   return shouldPay;
 }
@@ -330,7 +349,7 @@ List<String> generateMonths() {
   DateTime now = DateTime.now();
 
   // Add 6 months before the current month, current month, and 6 months after
-  for (int i = -3; i <= 6; i++) {
+  for (int i = -4; i <= 6; i++) {
     // Set a fixed day (e.g., 10nd of each month)
     DateTime date = DateTime(now.year, now.month + i, 10);
     String formattedDate =

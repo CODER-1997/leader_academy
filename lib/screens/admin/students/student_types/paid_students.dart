@@ -87,7 +87,7 @@ class PaidStudents extends StatelessWidget {
                   itemBuilder: (context, dynamic element) => GestureDetector(
                     onTap: () {
                       Get.to(StudentInfo(
-                          studentId: element.id));
+                          studentId: element.id, subject: '',));
                     },
                     child: StudentCard(
                       item: element['items'],

@@ -23,8 +23,9 @@ class StudentController extends GetxController {
   TextEditingController surnameEdit = TextEditingController();
   TextEditingController phoneEdit = TextEditingController();
 
-  RxString selectedGroup = ''.obs;
-  RxString selectedGroupId = ''.obs;
+   RxList selectedGroupId = [].obs;
+   RxList selectedGroups = [].obs;
+
 
   RxBool isFreeOfCharge = false.obs;
 
@@ -45,6 +46,7 @@ class StudentController extends GetxController {
       LeaderGroups.add({
         'group_name': (doc.data() as Map<String, dynamic>)['items']['name'],
         'group_id': (doc.data() as Map<String, dynamic>)['items']['uniqueId'],
+        'subject': (doc.data() as Map<String, dynamic>)['items']['subject'],
       });
     }
     loadGroups.value = false;
@@ -55,10 +57,11 @@ class StudentController extends GetxController {
   Future<void> fetchStudents() async {
     students.clear();
     QuerySnapshot querySnapshot =
-        await _firestore.collection('LeaderStudents').get();
+        await _firestore.collection('LeaderStudents').where('items.isDeleted',isEqualTo: false).get();
     for (var doc in querySnapshot.docs) {
       students.add({
         'name': (doc.data() as Map<String, dynamic>)['items']['name'],
+        'phone': (doc.data() as Map<String, dynamic>)['items']['phone'],
         'surname': (doc.data() as Map<String, dynamic>)['items']['surname'],
         'groups': (doc.data() as Map<String, dynamic>)['items']['groups'],
         'id': doc.id,
@@ -71,11 +74,11 @@ class StudentController extends GetxController {
     String name,
     String surname,
     String phone,
-  ) {
+   ) {
     nameEdit = TextEditingController(text: name);
     surnameEdit = TextEditingController(text: surname);
     phoneEdit = TextEditingController(text: phone);
-  }
+   }
 
   final CollectionReference _dataCollection =
       FirebaseFirestore.instance.collection('LeaderStudents');
@@ -90,8 +93,9 @@ class StudentController extends GetxController {
   RxString paymentType = "monthly".obs;
   Rx monthly = true.obs;
   TextEditingController yearlyFee = TextEditingController();
+  TextEditingController paymentCode = TextEditingController();
 
-  void addNewStudent(List studentGroups) async {
+  void addNewStudent( String groupId,String subject) async {
     isLoading.value = true;
     try {
       StudentModel newData = StudentModel(
@@ -100,20 +104,20 @@ class StudentController extends GetxController {
           phone: phone.text.toString().removeAllWhitespace,
           payments: [],
           uniqueId: generateUniqueId(),
-          group: selectedGroup.value,
-          startedDay: paidDate.value,
+           startedDay: paidDate.value,
           isDeleted: false,
-          groupId: selectedGroupId.value,
-          studyDays: [],
+           studyDays: [],
           isFreeOfcharge: isFreeOfCharge.value,
           orderInGroup: orderInGroup.value,
           exams: [],
           grades: [],
-          yeralyFee: yearlyFee.text.isNotEmpty ? int.parse(yearlyFee.text) : 0,
+          yeralyFee: yearlyFee.text.isNotEmpty ? int.parse(yearlyFee.text.removeAllWhitespace) : 0,
           paymentType: paymentType.value,
           homeWorks: [],
-          paymentCode: '',
-          groups: studentGroups);
+           groups: [{
+             'groupId':groupId,
+             'subject':subject
+           }]);
       // Create a new document with an empty list
       await _dataCollection.add({
         'items': newData.toMap(),
@@ -133,8 +137,6 @@ class StudentController extends GetxController {
       name.clear();
       phone.clear();
       surname.clear();
-      selectedGroup.value = "";
-      selectedGroupId.value = "";
       paidDate.value = '';
     } catch (e) {
       print(e);
@@ -154,13 +156,13 @@ class StudentController extends GetxController {
   //
   //student attach group
 
-  void attachGroup(
+   attachGroup (
     String documentId,
     String groupId,
+    String subject,
   ) async {
     isLoading.value = true;
-    if (payment.text.isNotEmpty) {
-      try {
+       try {
         // Retrieve the document reference
         DocumentReference documentReference = FirebaseFirestore.instance
             .collection('LeaderStudents')
@@ -175,7 +177,10 @@ class StudentController extends GetxController {
             List<dynamic>.from(currentMap['groups'] ?? []);
         // Append the new item to the array
 
-        currentArray.add(groupId);
+        currentArray.add({
+          'groupId':groupId,
+          'subject':subject
+        });
 
         // Update the document with the new array value
         await documentReference.update({
@@ -200,7 +205,7 @@ class StudentController extends GetxController {
           snackPosition: SnackPosition.BOTTOM,
         );
       }
-    }
+
   }
 
   void editStudent(String documentId) async {
@@ -217,15 +222,13 @@ class StudentController extends GetxController {
           _firestore.collection('LeaderStudents').doc(documentId);
 
       // Update the desired field
-      print('Selected group Id ${selectedGroupId.value}');
-      await documentReference.update({
+       await documentReference.update({
         'items.name': nameEdit.text,
         'items.surname': surnameEdit.text,
         'items.phone': phoneEdit.text,
-        'items.group': selectedGroup.value,
-        'items.startedDay': paidDate.value,
-        'items.groupId': selectedGroupId.value,
-        'items.isFreeOfcharge': isFreeOfCharge.value,
+         'items.groups': selectedGroups,
+        'items.startedDay': startedDay.value,
+         'items.isFreeOfcharge': isFreeOfCharge.value,
       });
       Get.back();
       isLoading.value = false;
@@ -237,7 +240,7 @@ class StudentController extends GetxController {
     isLoading.value = false;
   }
 
-  void addNewFeature(String documentId) async {
+  void updatePayment(String documentId , List payments) async {
     isLoading.value = true;
 
     final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -247,11 +250,14 @@ class StudentController extends GetxController {
       isLoading.value = true;
 
       // Reference to the document
-      DocumentReference documentReference =
-          _firestore.collection('LeaderStudents').doc(documentId);
+      DocumentReference documentReference =   _firestore.collection('LeaderStudents').doc(documentId);
+
+      for (var payment in payments){
+        payment['subject']="Matematika";
+      }
 
       await documentReference.update({
-        'items.exams': [],
+        'items.payments': payments,
       });
     } catch (e) {
       print('Error updating document field: $e');
@@ -341,21 +347,29 @@ class StudentController extends GetxController {
 
   // Calculate payment
 
-  TextEditingController payment = TextEditingController(text: '500 000');
-  TextEditingController paymentComment = TextEditingController();
-  TextEditingController reasonOfBeingAbsent = TextEditingController();
+  TextEditingController payment = TextEditingController( );
+   TextEditingController paymentComment = TextEditingController();
+   TextEditingController reasonOfBeingAbsent = TextEditingController();
+
+   setCode(String code){
+     paymentComment = TextEditingController(text: code);
+   }
 
   RxString selectedAbsenseReason = "".obs;
 
+
+
+
+
   RxString paidDate = ''.obs;
+  RxString startedDay = ''.obs;
   static DateTime date = DateTime.now();
 
-  RxString selectedStudyDate =
-      DateFormat('dd-MM-yyyy').format(date).toString().obs;
+  RxString selectedStudyDate = DateFormat('dd-MM-yyyy').format(date).toString().obs;
   static DateTime now = DateTime.now();
 
   showDate(RxString when) {
-    showDatePicker(
+     showDatePicker(
             initialDate: date,
             firstDate: DateTime(2020),
             lastDate: DateTime(2100),
@@ -381,7 +395,7 @@ class StudentController extends GetxController {
 
   RxBool courseFee = true.obs;
 
-  void addPayment(String documentId, String paidDate) async {
+  void addPayment(String documentId, String paidDate,String subject) async {
     isLoading.value = true;
     if (payment.text.isNotEmpty) {
       try {
@@ -419,22 +433,20 @@ class StudentController extends GetxController {
         currentArray.add({
           'paidDate': paidDate,
           'paidSum': payment.text.removeAllWhitespace,
-          'paymentCode': paymentComment.text,
           'courseFee': courseFee.value,
-          'id': generateUniqueId()
+          'paymentCode': paymentComment.text,
+          'id': generateUniqueId(),
+           'subject':subject
         });
-        // }
 
-        // Update the document with the new array value
-        await documentReference.update({
+         await documentReference.update({
           'items.payments': currentArray,
         });
 
-        // Optional: Provide feedback to the user
-        isLoading.value = false;
+         isLoading.value = false;
         Get.back();
-        payment.text = "500 000";
-        paymentComment.clear();
+         paymentComment.clear();
+         payment.clear();
       } catch (e) {
         // Handle errors here
         print('Error adding item to array: $e');
@@ -484,8 +496,8 @@ class StudentController extends GetxController {
           currentArray[index] = {
             'paidDate': paidDate.value,
             'paidSum': payment.text.removeAllWhitespace,
-            'paymentCommentary': paymentComment.text,
-            'id': uniqueId
+            'paymentCode': paymentComment.text,
+             'id': uniqueId
           };
         }
 
@@ -576,6 +588,7 @@ class StudentController extends GetxController {
     String studentId,
     Map hasReason,
     bool isAttended,
+    String subject
   ) async {
     isLoading.value = true;
    // try {
@@ -609,7 +622,8 @@ class StudentController extends GetxController {
           'groupId': groupId,
           'studentId': studentId,
           'hasReason': hasReason,
-          'isAttended': isAttended
+          'isAttended': isAttended,
+          'subject': subject,
         });
       } else {
         currentArray[index] = {
@@ -617,7 +631,9 @@ class StudentController extends GetxController {
           'groupId': groupId,
           'studentId': studentId,
           'hasReason': hasReason,
-          'isAttended': isAttended
+          'isAttended': isAttended,
+          'subject': subject,
+
         };
       }
 

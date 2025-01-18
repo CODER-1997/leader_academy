@@ -51,7 +51,7 @@ class UnPaidStudents extends StatelessWidget {
                       itemBuilder: (context, i) {
                         return GestureDetector(
                           onTap: () {
-                            Get.to(StudentInfo(studentId: students[i].id));
+                            Get.to(StudentInfo(studentId: students[i].id, subject: '',));
                           },
                           child: StudentCard(
                             item: students[i]['items'],

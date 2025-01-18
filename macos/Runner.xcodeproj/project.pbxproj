@@ -232,11 +232,11 @@
 				ORGANIZATIONNAME = "";
 				TargetAttributes = {
 					331C80D4294CF70F00263BE5 = {
-						CreatedOnToolsVersion = 14.0;
+						OnToolsVersion = 14.0;
 						TestTargetID = 33CC10EC2044A3C60003C045;
 					};
 					33CC10EC2044A3C60003C045 = {
-						CreatedOnToolsVersion = 9.2;
+						OnToolsVersion = 9.2;
 						LastSwiftMigration = 1100;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
@@ -246,7 +246,7 @@
 						};
 					};
 					33CC111A2044C6BA0003C045 = {
-						CreatedOnToolsVersion = 9.2;
+						OnToolsVersion = 9.2;
 						ProvisioningStyle = Manual;
 					};
 				};

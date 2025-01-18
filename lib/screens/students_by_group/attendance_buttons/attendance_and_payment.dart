@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:get_storage/get_storage.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../constants/custom_widgets/FormFieldDecorator.dart';
@@ -34,6 +35,7 @@ class AttendanceAndPayment extends StatelessWidget {
   final _formKey = GlobalKey<FormState>();
 
   static RxBool isChoosen = false.obs;
+  static GetStorage box = GetStorage();
 
   @override
   Widget build(BuildContext context) {
@@ -101,7 +103,6 @@ class AttendanceAndPayment extends StatelessWidget {
                                 children: [
                                   TextButton(
                                     onPressed: () async {
-                                      Get.back();
                                       messageLoader.value = true;
                                       for (int i = 0;
                                           i < selectedStudents.length;
@@ -112,49 +113,15 @@ class AttendanceAndPayment extends StatelessWidget {
                                                 studentController
                                                     .selectedStudyDate.value,
                                                 groupId) ==
-                                            'true') {
-                                          if (await Permission.sms.isGranted &&
-                                              selectedStudents[i]['phone']
-                                                  .toString()
-                                                  .isNotEmpty) {
-                                            _smsService.sendSMS(
-                                                selectedStudents[i]['phone'],
-                                                "Assalomu Aleykum ,"
-                                                "\nFarzandingiz ${selectedStudents[i]['surname'].toString().capitalizeFirst}  ${selectedStudents[i]['name'].toString().capitalizeFirst!}  bugungi ${groupName}  darsiga keldi. ");
-                                            _smsService.sendSMS(
-                                                selectedStudents[i]['phone'],
-                                                //"Sana:${DateTime.now().toString().substring(0,10)}"
-                                                "\nHurmat bilan SmartEduTime");
-                                          }
-                                        } else if (checkStatus(
-                                                selectedStudents[i]
-                                                    ['studyDays'],
-                                                studentController
-                                                    .selectedStudyDate.value,
-                                                groupId) ==
                                             'false') {
                                           if (await Permission.sms.isGranted &&
                                               selectedStudents[i]['phone']
                                                   .toString()
                                                   .isNotEmpty) {
-                                            var sabab = hasReason(
-                                                    selectedStudents[i]
-                                                        ['studyDays'],
-                                                    studentController
-                                                        .selectedStudyDate
-                                                        .value)
-                                                ? "sababli"
-                                                : "sababsiz";
-
                                             _smsService.sendSMS(
                                                 selectedStudents[i]['phone'],
-                                                ""
-                                                "Assalomu Aleykum ,"
-                                                "\nFarzandingiz ${selectedStudents[i]['surname'].toString().capitalizeFirst!}  ${selectedStudents[i]['name'].toString().capitalizeFirst!}  bugungi ${groupName} guruh  darsiga $sabab kelmadi. ");
-                                            _smsService.sendSMS(
-                                                selectedStudents[i]['phone'],
-                                                // "Sana:${DateTime.now().toString().substring(0,10)}"
-                                                "\nHurmat bilan SmartEduTime");
+                                                "${box.read("attendance_text".replaceAll("\$ismi", "${selectedStudents[i]['name']}").replaceAll("\fam", "${selectedStudents[i]['surname']}"))}");
+                                            Get.back();
                                           }
                                         } else {
                                           print('Sms yuborilmadi');

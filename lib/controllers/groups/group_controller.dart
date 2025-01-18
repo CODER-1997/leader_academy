@@ -34,6 +34,8 @@ class GroupController extends GetxController {
       FirebaseFirestore.instance.collection('LeaderGroups');
 
 
+  RxString selectedSubject = "Matematika".obs;
+
 
 
 
@@ -55,7 +57,7 @@ RxInt order = 0.obs;
         uniqueId: generateUniqueId(),
         order: order.value,
         warnedDay: '', docId: '',
-        smsSentDate: '',
+        smsSentDate: '', subject: selectedSubject.value,
           );
       // Create a new document with an empty list
       await _dataCollection.add({
@@ -124,7 +126,7 @@ RxInt order = 0.obs;
 
       // Update the desired field
       await documentReference.update({
-        'items.smsSentDate':DateFormat('dd-MM-yyyy').format(DateTime.now()),
+        'items.smsSentDate':DateFormat('dd-MM-yyyy HH:mm').format(DateTime.now()),
       });
       Get.back();
       isLoading.value = false;

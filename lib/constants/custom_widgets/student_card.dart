@@ -48,30 +48,7 @@ class StudentCard extends StatelessWidget {
                               item['surname'].toString().capitalizeFirst!,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        item['group'].toString().isNotEmpty
-                            ? Text(
-                                item['group'].toString().capitalizeFirst!,
-                                style: TextStyle(fontWeight: FontWeight.w700),
-                                overflow: TextOverflow.ellipsis,
-                              )
-                            : Text(
-                                "Group not defined".toString().capitalizeFirst!,
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.red),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                        item['phone'].toString().isNotEmpty
-                            ? SizedBox()
-                            : Text(
-                                "Phone is not defined"
-                                    .toString()
-                                    .capitalizeFirst!,
-                                style: TextStyle(
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.red),
-                                overflow: TextOverflow.ellipsis,
-                              ),
+
                       ],
                     ),
                   )

@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:leader/constants/custom_widgets/last_seen_widget.dart';
 import 'package:leader/controllers/auth/login_controller.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:leader/screens/admin/groups/selected_subject_card.dart';
 import '../../../constants/custom_widgets/FormFieldDecorator.dart';
 import '../../../constants/custom_widgets/custom_dialog.dart';
 import '../../../constants/custom_widgets/gradient_button.dart';
@@ -93,13 +94,13 @@ class _AdminGroupsState extends State<AdminGroups> {
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12)),
                           width: Get.width,
-                          height: Get.height / 4,
+                          height: Get.height / 3,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Column(
                                 children: [
-                                  Text("Add Group"),
+                                  Text("Guruh yaratish"),
                                   SizedBox(
                                     height: 16,
                                   ),
@@ -107,7 +108,7 @@ class _AdminGroupsState extends State<AdminGroups> {
                                       controller: groupController.GroupName,
                                       keyboardType: TextInputType.text,
                                       decoration:
-                                          buildInputDecoratione('Group name'),
+                                          buildInputDecoratione('Guruh nomi'),
                                       validator: (value) {
                                         if (value!.isEmpty) {
                                           return "Maydonlar bo'sh bo'lmasligi kerak";
@@ -117,6 +118,23 @@ class _AdminGroupsState extends State<AdminGroups> {
                                   SizedBox(
                                     height: 16,
                                   ),
+                                  SingleChildScrollView(
+                                    scrollDirection: Axis.horizontal,
+
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.start,
+                                      children: [
+                                        SelectedSubjectCard(subject: "Matematika"),
+                                        SelectedSubjectCard(subject: "Fizika"),
+                                        SelectedSubjectCard(subject: "Rus tili"),
+                                        SelectedSubjectCard(subject: "Ona tili"),
+                                        SelectedSubjectCard(subject: "Tarix"),
+                                        SelectedSubjectCard(subject: "Ingliz tili"),
+
+                                      ],
+                                    ),
+                                  ),
+
                                 ],
                               ),
                               InkWell(
@@ -127,7 +145,7 @@ class _AdminGroupsState extends State<AdminGroups> {
                                 },
                                 child: Obx(() => CustomButton(
                                     isLoading: groupController.isLoading.value,
-                                    text: "Add")),
+                                    text: "Yaratish")),
                               )
                             ],
                           ),
@@ -140,7 +158,7 @@ class _AdminGroupsState extends State<AdminGroups> {
               child: Container(
                 padding: EdgeInsets.all(12),
                 child: Text(
-                  "Add group",
+                  "Guruh yaratish",
                   style: TextStyle(color: Colors.white),
                 ),
                 decoration: BoxDecoration(
@@ -159,7 +177,7 @@ class _AdminGroupsState extends State<AdminGroups> {
                       box.write('passcode', value);
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text('Password created'.tr.capitalizeFirst!),
+                        content: Text('Parol yaratildi'.tr.capitalizeFirst!),
                         backgroundColor: Colors.green,
                         dismissDirection: DismissDirection.startToEnd,
                       ));
@@ -194,7 +212,7 @@ class _AdminGroupsState extends State<AdminGroups> {
                                     height: 16,
                                   ),
                                   Text(
-                                    'Do you want to update your passcode',
+                                    'Parolni yangilaysizmi ?',
                                     style: appBarStyle.copyWith(),
                                     textAlign: TextAlign.center,
                                   ),
@@ -218,7 +236,7 @@ class _AdminGroupsState extends State<AdminGroups> {
                                           Navigator.pop(context);
                                           ScaffoldMessenger.of(context)
                                               .showSnackBar(SnackBar(
-                                            content: Text('Password updated'
+                                            content: Text('Parol yangilandi'
                                                 .tr
                                                 .capitalizeFirst!),
                                             backgroundColor: Colors.green,
@@ -229,7 +247,7 @@ class _AdminGroupsState extends State<AdminGroups> {
                                       );
                                     },
                                     child: Text(
-                                      'update'.tr.capitalizeFirst!,
+                                      'Yangilash'.tr.capitalizeFirst!,
                                       style: appBarStyle.copyWith(
                                           color: Colors.green),
                                     ),
@@ -240,7 +258,7 @@ class _AdminGroupsState extends State<AdminGroups> {
                                         Navigator.pop(context);
                                       },
                                       child: Text(
-                                        'remove'.tr.capitalizeFirst!,
+                                        "O'chirish".tr.capitalizeFirst!,
                                         style: appBarStyle.copyWith(
                                             color: Colors.red),
                                       )),
@@ -300,6 +318,7 @@ class _AdminGroupsState extends State<AdminGroups> {
                               groupId: documents[i]['items']['uniqueId'],
                               groupName: documents[i]['items']['name'],
                               groupDocId: documents[i].id,
+                              subject: documents[i]['items']['subject'],
                             ));
                           },
                           child: Container(
@@ -344,145 +363,155 @@ class _AdminGroupsState extends State<AdminGroups> {
                                       ],
                                     ),
                                     documents[i]['items']['smsSentDate'] !=
-                                                null ||
+                                                null &&
                                             documents[i]['items']['smsSentDate']
                                                     .toString()
                                                     .length >
                                                 6
                                         ? LastSeenWidget(
-                                            dateTime:DateFormat("dd-MM-yyyy").parse( documents[i]['items']
-                                                    ['smsSentDate']
-                                                .toString()).toString())
+                                            dateTime:documents[i]['items']
+                                            ['smsSentDate']
+                                                .toString())
                                         : SizedBox()
                                   ],
                                 ),
-                                Row(
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
-                                    InkWell(
-                                      onTap: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (BuildContext context) {
-                                            groupController.setValues(
-                                              documents[i]['items']['name'],
-                                            );
+                                    Row(
+                                      children: [
+                                        box.read('isLogged') == '004422' ?       InkWell(
+                                          onTap: () {
+                                            showDialog(
+                                              context: context,
+                                              builder: (BuildContext context) {
+                                                groupController.setValues(
+                                                  documents[i]['items']['name'],
+                                                );
 
-                                            return Dialog(
-                                              backgroundColor: Colors.white,
-                                              insetPadding:
-                                                  EdgeInsets.symmetric(
-                                                      horizontal: 16),
+                                                return Dialog(
+                                                  backgroundColor: Colors.white,
+                                                  insetPadding:
+                                                      EdgeInsets.symmetric(
+                                                          horizontal: 16),
 
-                                              shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(
-                                                          12.0)),
-                                              //this right here
-                                              child: Form(
-                                                key: _formKey,
-                                                child: Container(
-                                                  padding: EdgeInsets.all(16),
-                                                  decoration: BoxDecoration(
-                                                      color: Colors.white,
+                                                  shape: RoundedRectangleBorder(
                                                       borderRadius:
                                                           BorderRadius.circular(
-                                                              12)),
-                                                  width: Get.width,
-                                                  height: Get.height / 3,
-                                                  child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      Column(
+                                                              12.0)),
+                                                  //this right here
+                                                  child: Form(
+                                                    key: _formKey,
+                                                    child: Container(
+                                                      padding: EdgeInsets.all(16),
+                                                      decoration: BoxDecoration(
+                                                          color: Colors.white,
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                  12)),
+                                                      width: Get.width,
+                                                      height: Get.height / 3,
+                                                      child: Column(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .spaceBetween,
                                                         children: [
-                                                          Text("Tahrirlash"),
-                                                          SizedBox(
-                                                            height: 16,
+                                                          Column(
+                                                            children: [
+                                                              Text("Tahrirlash"),
+                                                              SizedBox(
+                                                                height: 16,
+                                                              ),
+                                                              SizedBox(
+                                                                child:
+                                                                    TextFormField(
+                                                                        decoration:
+                                                                            buildInputDecoratione(
+                                                                                ''),
+                                                                        controller:
+                                                                            groupController
+                                                                                .GroupEdit,
+                                                                        keyboardType:
+                                                                            TextInputType
+                                                                                .text,
+                                                                        validator:
+                                                                            (value) {
+                                                                          if (value!
+                                                                              .isEmpty) {
+                                                                            return "Maydonlar bo'sh bo'lmasligi kerak";
+                                                                          }
+                                                                          return null;
+                                                                        }),
+                                                              ),
+                                                              SizedBox(
+                                                                height: 16,
+                                                              ),
+                                                            ],
                                                           ),
-                                                          SizedBox(
-                                                            child:
-                                                                TextFormField(
-                                                                    decoration:
-                                                                        buildInputDecoratione(
-                                                                            ''),
-                                                                    controller:
+                                                          InkWell(
+                                                            onTap: () {
+                                                              if (_formKey
+                                                                  .currentState!
+                                                                  .validate()) {
+                                                                groupController
+                                                                    .editGroup(
+                                                                        documents[i]
+                                                                            .id
+                                                                            .toString());
+                                                              }
+                                                            },
+                                                            child: Obx(() =>
+                                                                CustomButton(
+                                                                    isLoading:
                                                                         groupController
-                                                                            .GroupEdit,
-                                                                    keyboardType:
-                                                                        TextInputType
-                                                                            .text,
-                                                                    validator:
-                                                                        (value) {
-                                                                      if (value!
-                                                                          .isEmpty) {
-                                                                        return "Maydonlar bo'sh bo'lmasligi kerak";
-                                                                      }
-                                                                      return null;
-                                                                    }),
-                                                          ),
-                                                          SizedBox(
-                                                            height: 16,
-                                                          ),
+                                                                            .isLoading
+                                                                            .value,
+                                                                    text: "Edit")),
+                                                          )
                                                         ],
                                                       ),
-                                                      InkWell(
-                                                        onTap: () {
-                                                          if (_formKey
-                                                              .currentState!
-                                                              .validate()) {
-                                                            groupController
-                                                                .editGroup(
-                                                                    documents[i]
-                                                                        .id
-                                                                        .toString());
-                                                          }
-                                                        },
-                                                        child: Obx(() =>
-                                                            CustomButton(
-                                                                isLoading:
-                                                                    groupController
-                                                                        .isLoading
-                                                                        .value,
-                                                                text: "Edit")),
-                                                      )
-                                                    ],
+                                                    ),
                                                   ),
-                                                ),
-                                              ),
+                                                );
+                                              },
                                             );
                                           },
-                                        );
-                                      },
-                                      child: Icon(Icons.edit),
-                                    ),
-                                    SizedBox(
-                                      width: 8,
-                                    ),
-                                    IconButton(
-                                        padding: EdgeInsets.zero,
-                                        onPressed: () {
-                                          showDialog(
-                                            context: context,
-                                            builder: (BuildContext context) {
-                                              return CustomAlertDialog(
-                                                title: "Delete Group",
-                                                description:
-                                                    "Are you sure you want to delete this group ?",
-                                                onConfirm: () async {
-                                                  // Perform delete action here
-                                                  groupController.deleteGroup(
-                                                      documents[i].id);
+                                          child: Icon(Icons.edit),
+                                        ):SizedBox(),
+                                        SizedBox(height: 2,),
+                                        SizedBox(
+                                          width: 8,
+                                        ),
+                                        box.read('isLogged') == '004422'?       IconButton(
+                                            padding: EdgeInsets.zero,
+                                            onPressed: () {
+                                              showDialog(
+                                                context: context,
+                                                builder: (BuildContext context) {
+                                                  return CustomAlertDialog(
+                                                    title: "Delete Group",
+                                                    description:
+                                                        "Are you sure you want to delete this group ?",
+                                                    onConfirm: () async {
+                                                      // Perform delete action here
+                                                      groupController.deleteGroup(
+                                                          documents[i].id);
+                                                    },
+                                                    img: 'assets/delete.png',
+                                                  );
                                                 },
-                                                img: 'assets/delete.png',
                                               );
                                             },
-                                          );
-                                        },
-                                        icon: Icon(
-                                          Icons.delete,
-                                          color: Colors.red,
-                                        ))
+                                            icon: Icon(
+                                              Icons.delete,
+                                              color: Colors.red,
+                                            )):SizedBox()
+                                      ],
+                                    ),
+                                    Text('${documents[i]['items']['subject']}',style: TextStyle(
+                                        fontSize: 12,
+                                      color: Colors.grey
+                                    ),)
                                   ],
                                 )
                               ],

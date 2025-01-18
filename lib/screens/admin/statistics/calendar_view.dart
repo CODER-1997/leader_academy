@@ -39,8 +39,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Attendance Calendar')),
+      appBar: AppBar(title: Text('Kelgan kunlari')),
       body: TableCalendar(
+        locale: 'uz_Uz',
+        startingDayOfWeek: StartingDayOfWeek.monday,
         firstDay: DateTime.utc(2020, 1, 1),
         lastDay: DateTime.utc(2050, 12, 31),
         focusedDay: DateTime.now(),

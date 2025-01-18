@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:leader/controllers/groups/group_controller.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:leader/constants/text_styles.dart';
 
@@ -9,24 +10,20 @@ import '../../../constants/custom_widgets/FormFieldDecorator.dart';
 import '../../../constants/custom_widgets/gradient_button.dart';
 import '../../../constants/input_formatter.dart';
 import '../../../controllers/students/student_controller.dart';
+import '../../admin/groups/selected_subject_card.dart';
 
-class AddStudent extends StatelessWidget {
-  final String groupName;
-  final String groupId;
-  final String subject;
+class AddStudent2 extends StatelessWidget {
 
-  AddStudent({
-    required this.groupName,
-    required this.groupId,
-    required this.subject,
-  });
 
   StudentController studentController = Get.put(StudentController());
   final _formKey = GlobalKey<FormState>();
 
   Rx isNewStudent = true.obs;
   RxString studentId = ''.obs;
+  RxString selectedSubject = ''.obs;
+  RxString selectedGroupId = ''.obs;
   RxList studentGroups = [].obs;
+  GroupController groupController = Get.put(GroupController());
 
   bool checkAbsense() {
     var isInGroups = false;
@@ -78,9 +75,12 @@ class AddStudent extends StatelessWidget {
       onPressed: () {
         studentController.isFreeOfCharge.value = false;
         studentController.fetchStudents();
+        studentController.fetchGroups();
         studentController.paidDate.value = '';
         StudentController.date = DateTime.now();
         isNewStudent.value = true;
+        selectedGroupId.value ="";
+        selectedSubject.value="";
 
 
         showDialog(
@@ -332,6 +332,50 @@ class AddStudent extends StatelessWidget {
                                         )),
                                   ],
                                 ),
+                                SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      for(int i = 0; i  <  studentController.LeaderGroups.length;i++)
+                                      Obx(() => InkWell(
+                                        onTap: () {
+                                         selectedSubject.value = studentController.LeaderGroups[i]['subject'];
+                                         selectedGroupId.value = studentController.LeaderGroups[i]['group_id'];
+                                        },
+                                        child: Container(
+                                          padding: EdgeInsets.symmetric(
+                                              horizontal: 18, vertical: 8),
+                                          margin: EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                              color: selectedGroupId.value == studentController.LeaderGroups[i]['group_id']
+                                                  ? Colors.green
+                                                  : Colors.white,
+                                              borderRadius:
+                                              BorderRadius.circular(112),
+                                              border: Border.all(
+                                                  color: Colors.green,
+                                                  width: 1)),
+                                          child: Text(
+                                            "${studentController.LeaderGroups[i]['group_name']}",
+                                            style: TextStyle(
+                                              color: selectedGroupId.value == studentController.LeaderGroups[i]['group_id']
+                                                  ? Colors.white
+                                                  : Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      )),
+
+
+                                    ],
+                                  ),
+                                ),
+
+
+
+
                               ],
                             ),
                           ),
@@ -362,7 +406,7 @@ class AddStudent extends StatelessWidget {
                                               EdgeInsets.symmetric(vertical: 8),
                                           child: InkWell(
                                             onTap: () async {
-                              await studentController.attachGroup( studentId.value, groupId, subject);
+                              await studentController.attachGroup( studentId.value, selectedGroupId.value, selectedSubject.value);
                                  studentController .paymentType.value = "monthly";
                                               studentController.monthly.value =
                                                   true;
@@ -381,11 +425,11 @@ class AddStudent extends StatelessWidget {
                                   isNewStudent.value == false
                                       ? InkWell(
                                           onTap: () async {
-                          if (_formKey.currentState!  .validate()  ) {
+                          if (_formKey.currentState!  .validate()  && selectedGroupId.value.isNotEmpty ) {
                            studentController .paymentType.value = "monthly";
                            studentController.monthly.value =  true;
                              studentController.yearlyFee.text =  '';
-                         studentController.addNewStudent( groupId, subject);
+                         studentController.addNewStudent(  selectedGroupId.value, selectedSubject.value);
 
                                               studentController.name.clear();
                                               studentController.surname.clear();
@@ -410,9 +454,9 @@ class AddStudent extends StatelessWidget {
                                               isNewStudent.value = false;
                                             } else {
                                               if (_formKey.currentState!
-                                                  .validate()) {
+                                                  .validate() && selectedGroupId.value.isNotEmpty) {
                                                 studentController.addNewStudent(
-                                                    groupId, subject);
+                                                    selectedGroupId.value, selectedSubject.value);
                                                 studentController.paymentType
                                                     .value = "monthly";
                                                 studentController.monthly.value =
@@ -429,6 +473,17 @@ class AddStudent extends StatelessWidget {
 
 
                                               }
+                                              else
+                                                {
+
+                                                  Get.snackbar(
+                                                    "Xatolik !",
+                                                    "Bazi maydonlar bo'sh !",
+                                                    backgroundColor: Colors.red,
+                                                    colorText: Colors.white,
+                                                    snackPosition: SnackPosition.TOP,
+                                                  );
+                                                }
                                             }
                                           },
                                           child: Obx(() => CustomButton(

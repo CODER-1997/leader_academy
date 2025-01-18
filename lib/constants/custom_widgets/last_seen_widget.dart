@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -9,45 +8,60 @@ class LastSeenWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Duration difference = DateTime.now().difference(DateTime.parse(dateTime));
+    String inputDate = dateTime.toString().substring(0,16);
+     DateFormat dateFormat = DateFormat('dd-MM-yyyy HH:mm');
 
-    Color textColor;
-    if (difference.inDays <= 1) {
-      textColor = Colors.green;
-    } else if (difference.inDays <= 3) {
-      textColor = Colors.orange;
-    } else {
-      textColor = Colors.red;
+    // Parse the input date
+    DateTime givenDate = dateFormat.parse(inputDate);
+    print("gggg ${givenDate.toString().substring(0,16)}");
+
+    // Get the current date and time
+    DateTime currentDate = DateTime.now();
+
+    // Calculate the difference
+    Duration difference = currentDate.difference(givenDate);
+
+    Color textColor() {
+      if (difference.inHours < 24) {
+        return Colors.green;
+      } else {
+        return Colors.red;
+      }
     }
+
+    String text(){
+      var txt = "";
+      if(difference.inHours<24){
+        txt =  difference.inHours.toString() + " soat oldin sms yuborildi" ;
+      }
+      if(difference.inDays>=1){
+        txt =   difference.inDays.toString() + " kun oldin sms yuborildi";
+      }
+
+      return txt;
+    }
+
+
+
 
     return Container(
       margin: EdgeInsets.only(top: 8),
       padding: EdgeInsets.all(4),
       decoration: BoxDecoration(
-        
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: textColor,
-          
-        )
+
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: textColor(),
+
+          )
       ),
       child: Text(
-        'Tekshirildi: ${_formatDuration(difference)} oldin',
-        style: TextStyle(color: textColor, fontSize: 12,fontWeight: FontWeight.w700),
+        text(),
+        style: TextStyle(
+            color: textColor(), fontSize: 12, fontWeight: FontWeight.w700),
       ),
     );
   }
 
 
-  String _formatDuration(Duration duration) {
-    if (duration.inDays > 0) {
-      return '${duration.inDays} kun';
-    } else if (duration.inHours > 0) {
-      return '${duration.inHours} soat ';
-    } else if (duration.inMinutes > 0) {
-      return '${duration.inMinutes} minut ';
-    } else {
-      return 'Yaqindagina';
-    }
-  }
 }

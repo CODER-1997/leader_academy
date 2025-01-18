@@ -32,78 +32,7 @@ class _GroupsState extends State<Groups> {
           backgroundColor: dashBoardColor,
           toolbarHeight: 64,
           actions: [
-            // TextButton.icon(
-            //     onPressed: () {
-            //       showDialog(
-            //         context: context,
-            //         builder: (BuildContext context) {
-            //           return Dialog(
-            //             backgroundColor: Colors.white,
-            //
-            //             shape: RoundedRectangleBorder(
-            //                 borderRadius: BorderRadius.circular(12.0)),
-            //             //this right here
-            //             child: Form(
-            //               key: _formKey,
-            //               child: Container(
-            //                 padding: EdgeInsets.all(16),
-            //                 decoration: BoxDecoration(
-            //                     color: Colors.white,
-            //                     borderRadius: BorderRadius.circular(12)),
-            //                 width: Get.width - 16,
-            //                 height: Get.height / 4,
-            //                 child: Column(
-            //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            //                   children: [
-            //                     Column(
-            //                       children: [
-            //                         Text("Add Group"),
-            //                         SizedBox(
-            //                           height: 8,
-            //                         ),
-            //                         TextFormField(
-            //                             controller: groupController.GroupName,
-            //                             keyboardType: TextInputType.text,
-            //                             decoration:
-            //                                 buildInputDecoratione('Group name'),
-            //                             validator: (value) {
-            //                               if (value!.isEmpty) {
-            //                                 return "Maydonlar bo'sh bo'lmasligi kerak";
-            //                               }
-            //                               return null;
-            //                             }),
-            //                         SizedBox(
-            //                           height: 4,
-            //                         ),
-            //                       ],
-            //                     ),
-            //                     InkWell(
-            //                       onTap: () {
-            //                         if (_formKey.currentState!.validate()) {
-            //                           groupController.addNewGroup();
-            //                         }
-            //                       },
-            //                       child: Obx(() => CustomButton(
-            //                           isLoading:
-            //                               groupController.isLoading.value,
-            //                           text: "Add")),
-            //                     )
-            //                   ],
-            //                 ),
-            //               ),
-            //             ),
-            //           );
-            //         },
-            //       );
-            //     },
-            //     icon: Icon(
-            //       Icons.add,
-            //       color: Colors.white,
-            //     ),
-            //     label: Text(
-            //       "Add Group",
-            //       style: TextStyle(color: Colors.white),
-            //     )),
+
             IconButton(
                 onPressed: () {
                   authController.logOut();
@@ -167,8 +96,8 @@ class _GroupsState extends State<Groups> {
                                           Get.snackbar(
                                             duration: Duration(seconds: 5),
                                             icon: Icon(Icons.block,color: Colors.white,),
-                                            "Error",
-                                            "Your teacher account is blocked.",
+                                            "Xatolik",
+                                            "Akkaunt bloklangan",
                                             snackPosition: SnackPosition.TOP,
                                             backgroundColor: Colors.red,
                                             colorText: Colors.white,
@@ -179,7 +108,9 @@ class _GroupsState extends State<Groups> {
                                           Get.to(
                                               StudentsByGroup(
                                               groupName: data['items']['groups'][i]['group_name'],
-                                              groupId: data['items']['groups'][i]['group_id'], groupDocId: snapshot.data!.id,
+                                              groupId: data['items']['groups'][i]['group_id'],
+                                                groupDocId: snapshot.data!.id,
+                                                subject: data['items']['groups'][i]['subject'],
                                           ));
                                         }
                                       },
