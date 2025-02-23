@@ -29,8 +29,7 @@ class FireAuth extends GetxController {
       await FirebaseFirestore.instance.collection('LeaderTeachers').get();
       TeacherList.assignAll(snapshot.docs);
       isLoading.value = false;
-      print("Teacher List ${TeacherList}");
-   } catch (e) {
+    } catch (e) {
       isLoading.value = false;
     }
     return TeacherList;
@@ -58,13 +57,11 @@ class FireAuth extends GetxController {
 
   void signIn(String userId) async {
     await getTeacherList();
-    print("Teachers"  + TeacherList.toString());
-    isLoading.value = true;
+     isLoading.value = true;
     var holat = true;
     int i = 0;
     isLoading.value = true;
     try {
-      print("Test" + TeacherList[0]['items']['name']);
 
       while (holat) {
         if (TeacherList[i]['items']['uniqueId'] == userId) {

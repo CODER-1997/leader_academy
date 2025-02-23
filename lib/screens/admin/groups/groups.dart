@@ -1,14 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screen_lock/flutter_screen_lock.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
-import 'package:intl/intl.dart';
-import 'package:leader/constants/custom_widgets/last_seen_widget.dart';
+ import 'package:leader/constants/custom_widgets/last_seen_widget.dart';
 import 'package:leader/controllers/auth/login_controller.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:leader/screens/admin/groups/selected_subject_card.dart';
+import 'package:leader/controllers/device_controllers/device_controller.dart';
+ import 'package:leader/screens/admin/groups/selected_subject_card.dart';
 import '../../../constants/custom_widgets/FormFieldDecorator.dart';
 import '../../../constants/custom_widgets/custom_dialog.dart';
 import '../../../constants/custom_widgets/gradient_button.dart';
@@ -167,116 +166,7 @@ class _AdminGroupsState extends State<AdminGroups> {
               ),
             ),
           ),
-          IconButton(
-              onPressed: () {
-                if (box.read('passcode') == null) {
-                  screenLockCreate(
-                    inputController: InputController(),
-                    context: context,
-                    onConfirmed: (String value) {
-                      box.write('passcode', value);
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text('Parol yaratildi'.tr.capitalizeFirst!),
-                        backgroundColor: Colors.green,
-                        dismissDirection: DismissDirection.startToEnd,
-                      ));
-                    },
-                  );
-                } else {
-                  showDialog(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return Dialog(
-                        backgroundColor: Colors.white,
-                        insetPadding: EdgeInsets.symmetric(horizontal: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12.0)),
-                        //this right here
-                        child: Container(
-                          padding: EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12)),
-                          width: Get.width,
-                          height: 180,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  SizedBox(
-                                    height: 16,
-                                  ),
-                                  Text(
-                                    'Parolni yangilaysizmi ?',
-                                    style: appBarStyle.copyWith(),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  SizedBox(
-                                    height: 16,
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  TextButton(
-                                    onPressed: () async {
-                                      screenLockCreate(
-                                        inputController: InputController(),
-                                        context: context,
-                                        onConfirmed: (String value) {
-                                          box.write('passcode', value);
-                                          Navigator.pop(context);
-                                          Navigator.pop(context);
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(SnackBar(
-                                            content: Text('Parol yangilandi'
-                                                .tr
-                                                .capitalizeFirst!),
-                                            backgroundColor: Colors.green,
-                                            dismissDirection:
-                                                DismissDirection.startToEnd,
-                                          ));
-                                        },
-                                      );
-                                    },
-                                    child: Text(
-                                      'Yangilash'.tr.capitalizeFirst!,
-                                      style: appBarStyle.copyWith(
-                                          color: Colors.green),
-                                    ),
-                                  ),
-                                  TextButton(
-                                      onPressed: () {
-                                        box.write('passcode', null);
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text(
-                                        "O'chirish".tr.capitalizeFirst!,
-                                        style: appBarStyle.copyWith(
-                                            color: Colors.red),
-                                      )),
-                                ],
-                              )
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                }
-              },
-              icon: Icon(
-                Icons.lock,
-                color: Colors.white,
-              )),
-          IconButton(
+           IconButton(
               onPressed: () {
                 auth.logOut();
               },
@@ -313,13 +203,18 @@ class _AdminGroupsState extends State<AdminGroups> {
                       Container(
                         key: ValueKey(documents[i].id),
                         child: InkWell(
-                          onTap: () {
-                            Get.to(StudentsByGroup(
-                              groupId: documents[i]['items']['uniqueId'],
-                              groupName: documents[i]['items']['name'],
-                              groupDocId: documents[i].id,
-                              subject: documents[i]['items']['subject'],
-                            ));
+                          onTap: () async {
+                           await DeviceChecker.getDeviceId();
+
+
+
+                              Get.to(StudentsByGroup(
+                                groupId: documents[i]['items']['uniqueId'],
+                                groupName: documents[i]['items']['name'],
+                                groupDocId: documents[i].id,
+                                subject: documents[i]['items']['subject'],
+                              ));
+
                           },
                           child: Container(
                             width: Get.width,

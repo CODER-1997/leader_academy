@@ -38,7 +38,7 @@ class Exams extends StatelessWidget {
         child: StreamBuilder(
             stream: FirebaseFirestore.instance
                 .collection('LeaderExams')
-                .where('items.group', isEqualTo: group)
+                .where('items.groupId', isEqualTo: groupId)
                 .snapshots(),
             builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -282,7 +282,7 @@ class Exams extends StatelessWidget {
       ),
       floatingActionButtonLocation:
           FloatingActionButtonLocation.miniCenterFloat,
-      floatingActionButton: AddExams(group: group),
+      floatingActionButton: AddExams(group: group, groupId: groupId,),
     );
   }
 }

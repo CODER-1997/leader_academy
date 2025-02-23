@@ -1,5 +1,3 @@
-
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -19,13 +17,10 @@ class GroupController extends GetxController {
   TextEditingController GroupName = TextEditingController();
   TextEditingController GroupEdit = TextEditingController();
 
-
   GetStorage box = GetStorage();
-
 
   setValues(
     String name,
-
   ) {
     GroupEdit = TextEditingController(text: name);
   }
@@ -33,20 +28,39 @@ class GroupController extends GetxController {
   final CollectionReference _dataCollection =
       FirebaseFirestore.instance.collection('LeaderGroups');
 
-
   RxString selectedSubject = "Matematika".obs;
 
+  RxBool loadGroups = false.obs;
+  RxBool loadStudents = false.obs;
 
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  RxList LeaderGroups = [].obs;
 
+  Future<void> fetchGroups() async {
+    loadGroups.value = true;
+    QuerySnapshot querySnapshot =
+        await _firestore.collection('LeaderGroups').get();
+    LeaderGroups.clear();
+    for (var doc in querySnapshot.docs) {
+      LeaderGroups.add({
+        'group_name': (doc.data() as Map<String, dynamic>)['items']['name'],
+        'group_id': (doc.data() as Map<String, dynamic>)['items']['uniqueId'],
+        'subject': (doc.data() as Map<String, dynamic>)['items']['subject'],
+        'id': doc.id,
+      });
+    }
+    LeaderGroups.toList();
+    print("Actial sasa $LeaderGroups");
+    loadGroups.value = false;
+  }
 
+  onInit() {
+    fetchGroups();
+    super.onInit();
+  }
 
-
-
-
-
-RxInt order = 0.obs;
-
+  RxInt order = 0.obs;
 
   void addNewGroup() async {
     Get.back();
@@ -56,9 +70,11 @@ RxInt order = 0.obs;
         name: GroupName.text,
         uniqueId: generateUniqueId(),
         order: order.value,
-        warnedDay: '', docId: '',
-        smsSentDate: '', subject: selectedSubject.value,
-          );
+        warnedDay: '',
+        docId: '',
+        smsSentDate: '',
+        subject: selectedSubject.value,
+      );
       // Create a new document with an empty list
       await _dataCollection.add({
         'items': newData.toMap(),
@@ -72,7 +88,6 @@ RxInt order = 0.obs;
       // );
       isLoading.value = false;
       GroupName.clear();
-
     } catch (e) {
       print(e);
       Get.snackbar(
@@ -87,6 +102,7 @@ RxInt order = 0.obs;
 
 // Firestore
   }
+
   //
   void editGroup(String documentId) async {
     isLoading.value = true;
@@ -98,7 +114,8 @@ RxInt order = 0.obs;
       isLoading.value = true;
 
       // Reference to the document
-      DocumentReference documentReference =  _firestore.collection('LeaderGroups').doc(documentId);
+      DocumentReference documentReference =
+          _firestore.collection('LeaderGroups').doc(documentId);
 
       // Update the desired field
       await documentReference.update({
@@ -112,6 +129,7 @@ RxInt order = 0.obs;
     }
     isLoading.value = false;
   }
+
   void setSmsDate(String documentId) async {
     isLoading.value = true;
 
@@ -122,11 +140,13 @@ RxInt order = 0.obs;
       isLoading.value = true;
 
       // Reference to the document
-      DocumentReference documentReference =  _firestore.collection('LeaderGroups').doc(documentId);
+      DocumentReference documentReference =
+          _firestore.collection('LeaderGroups').doc(documentId);
 
       // Update the desired field
       await documentReference.update({
-        'items.smsSentDate':DateFormat('dd-MM-yyyy HH:mm').format(DateTime.now()),
+        'items.smsSentDate':
+            DateFormat('dd-MM-yyyy HH:mm').format(DateTime.now()),
       });
       Get.back();
       isLoading.value = false;
@@ -147,11 +167,13 @@ RxInt order = 0.obs;
       isLoading.value = true;
 
       // Reference to the document
-      DocumentReference documentReference =  _firestore.collection('LeaderGroups').doc(documentId);
+      DocumentReference documentReference =
+          _firestore.collection('LeaderGroups').doc(documentId);
 
       // Update the desired field
       await documentReference.update({
-        'items.warnedDay':  DateFormat('dd-MM-yyyy').format(DateTime.now()).toString(),
+        'items.warnedDay':
+            DateFormat('dd-MM-yyyy').format(DateTime.now()).toString(),
       });
       Get.back();
       isLoading.value = false;

@@ -13,7 +13,6 @@ class LastSeenWidget extends StatelessWidget {
 
     // Parse the input date
     DateTime givenDate = dateFormat.parse(inputDate);
-    print("gggg ${givenDate.toString().substring(0,16)}");
 
     // Get the current date and time
     DateTime currentDate = DateTime.now();

@@ -159,11 +159,9 @@ class _TeachersState extends State<Teachers> {
                                                     if (teachersController.teacherGroupIds.contains(studentController.LeaderGroups[i]['group_id'])) {
                                                       teachersController .teacherGroupIds.remove(studentController.LeaderGroups[i]['group_id']);
                                                       teachersController.teacherGroups.removeWhere((el)=> el['group_id']== studentController.LeaderGroups[i]['group_id']);
-                                                      print('Teacher groups ${ teachersController.teacherGroups}');
-                                                    } else {
+                                                     } else {
                                                       teachersController.teacherGroups.add(studentController.LeaderGroups[i]);
                                                       teachersController.teacherGroupIds.add(studentController.LeaderGroups[i]['group_id']);
-                                                      print('Teacher groups ${ teachersController.teacherGroups}');
 
                                                     }
 
@@ -480,12 +478,10 @@ class _TeachersState extends State<Teachers> {
                                                                                 if (teachersController.teacherGroupIdsEdit.contains(studentController.LeaderGroups[i]['group_id'])) {
                                                                                   teachersController.teacherGroupIdsEdit.remove(studentController.LeaderGroups[i]['group_id']);
                                                                                   teachersController.teacherGroupsEdit.removeWhere((el)=> el['group_id'] == studentController.LeaderGroups[i]['group_id']);
-                                                                                  print("Edited groups ${teachersController.teacherGroupsEdit}");
 
                                                                                 } else {
                                                                                   teachersController.teacherGroupIdsEdit.add(studentController.LeaderGroups[i]['group_id']);
                                                                                   teachersController.teacherGroupsEdit.add(studentController.LeaderGroups[i]);
-                                                                                  print("Edited groups ${teachersController.teacherGroupsEdit}");
 
                                                                                 }
 

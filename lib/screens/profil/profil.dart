@@ -56,7 +56,7 @@ class Profil extends StatelessWidget {
                     mainAxisAlignment:MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                          'Fullname: ',
+                          'Fulame: ',
                           style: TextStyle(
                               color: Colors.black, fontWeight: FontWeight.w700)),    Text(
                           '${box.read('teacherName')}  ${box.read('teacherSurname')}',

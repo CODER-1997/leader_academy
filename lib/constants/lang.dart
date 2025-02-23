@@ -19,7 +19,7 @@ class LanguageTranslations extends Translations {
   'deleivery_time': "Yezkazilish vaqti",
   'delivery_place': "Yetkazilish manzili",
   'app_language': "Ilova tili",
-  'change_lang': "Tilni o'zgartirish",
+  'change_lang': "Tii o'zgartirish",
   'do': "Qo'llash",
   'orders': "Buyurtmalar",
   'total': 'jami',

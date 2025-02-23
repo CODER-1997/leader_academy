@@ -5,6 +5,8 @@ class ExamModel {
   final String date;
   final bool isTestType;
   final bool isWarned;
+  final String groupId;
+
 
 
 
@@ -19,6 +21,7 @@ class ExamModel {
     required this.date,
     required this.isTestType,
     required this.isWarned,
+    required this.groupId,
 
 
 
@@ -33,6 +36,7 @@ class ExamModel {
       'group': group,
       'isTestType': isTestType,
       'isWarned': isWarned,
+      'groupId': groupId,
 
     };
   }

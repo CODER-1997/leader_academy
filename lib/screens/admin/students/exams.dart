@@ -165,7 +165,9 @@ class AdminStudentExam extends StatelessWidget {
                                           fontSize: 10),
                                     ),
                                     Text(
-                                      " ${int.parse(exams[0]['items']['exams'][i]['howMany']) * 100/int.parse(exams[0]['items']['exams'][i]['from'])}".substring(0,5) + "%",
+                                      "${int.parse(exams[0]['items']['exams'][i]['howMany']) * 100/int.parse(exams[0]['items']['exams'][i]['from'])}".length >4
+                                          ?"${int.parse(exams[0]['items']['exams'][i]['howMany']) * 100/int.parse(exams[0]['items']['exams'][i]['from'])}".substring(0,5) + "%":
+                                          "${int.parse(exams[0]['items']['exams'][i]['howMany']) * 100/int.parse(exams[0]['items']['exams'][i]['from'])}" + "%",
                                       style: appBarStyle.copyWith(
                                           color: Colors.green,
                                           fontSize: 14),

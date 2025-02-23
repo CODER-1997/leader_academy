@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:1086106424242:android:c97bda907599dcecdecaab",
+        "android_client_info": {
+          "package_name": "app.bekzod.leader_student"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKlNBQBFPt9jmLVx-ALNUbZ0SheN_ahd8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:1086106424242:android:55f1f17f2e5ba18cdecaab",
         "android_client_info": {
           "package_name": "com.example.leader"

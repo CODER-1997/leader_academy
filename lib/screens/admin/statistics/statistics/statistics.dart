@@ -33,74 +33,17 @@ class Statistics extends StatelessWidget {
 
   StudentController studentController = Get.put(StudentController());
   GetStorage box = GetStorage();
-  static List<String> targetMonths = [
-    "September",
-    "October",
-    "November",
-    "December",
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July"
-  ];
 
-  // Initialize the result map with default values
+   List _students = [];
+  //
+  //
+  //
+  // List getPaymentInfo(List students) {
+  //   var _students = [];
 
-  Map<String, Map<String, int>> result = {};
-  Map<String, Map<String, int>> _result_(){
-        result = {
-      for (var month in targetMonths) month: {"sum": 0, "code": 0}
-    };
-
-       return result;
-
-  }
-
-  List generateMassive(List payments) {
-    _result_();
-    var _result = [];
-    // Process the payments
-    for (var payment in payments) {
-      // Parse the date to extract the month name
-      DateTime date = DateFormat("dd-MM-yyyy").parse(payment['paidDate']);
-      String monthName = DateFormat("MMMM").format(date);
-
-      // Update the corresponding month in the result
-      if (result.containsKey(monthName)) {
-        result[monthName] = {
-          "sum":int.parse( payment['paidSum']),
-          "code": int.parse(payment['paymentCode'])
-        };
-      }
-    }
-
-    for (var entry in result.entries) {
-
-      _result.add(entry.value['sum']);
-      _result.add(entry.value['code']);
-    }
-
-    return _result;
-  }
-
-  List getPaymentInfo(List students) {
-    var _students = [];
-    for (var item in students) {
-      var payments = item['items']['payments'];
-      var name = item['items']['name'];
-
-      var surname = item['items']['surname'];
-      _students.add({
-        'surname': name.toString().capitalizeFirst! + " " + surname.toString().capitalizeFirst!,
-         'payments': generateMassive(payments)
-      });
-    }
-
-    return _students;
-  }
+  //
+  //   return _students;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -143,11 +86,12 @@ class Statistics extends StatelessWidget {
                 if (snapshot.hasData) {
                   var list = snapshot.data!.docs;
 
+
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ExcelStatistics(
-                        students: getPaymentInfo(list),
+                        students: list,
                       ),
                       SubjectCard(
                           subject: 'Matematika', img: 'math', students: list),

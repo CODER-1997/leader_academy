@@ -32,13 +32,13 @@ class Login extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Image.asset('assets/logo.png',color: Colors.white,),
+            Image.asset('assets/logo.png',color: Colors.white,width: Get.width/3,height: Get.width/3,),
 
             Text(
               'Login',
               style: TextStyle(
                 color: Colors.white,
-                fontSize: 36.0,
+                fontSize: 22.0,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,

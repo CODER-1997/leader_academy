@@ -9,8 +9,9 @@ import '../../../controllers/exams/exams_controller.dart';
 
 class AddExams extends StatelessWidget {
   final String group;
+  final String groupId;
 
-  AddExams({required this.group});
+  AddExams({required this.group, required this.groupId});
 
   final _formKey = GlobalKey<FormState>();
   ExamsController examController = Get.put(ExamsController());
@@ -146,7 +147,7 @@ class AddExams extends StatelessWidget {
                         InkWell(
                           onTap: () {
                             if (_formKey.currentState!.validate()) {
-                              examController.addNewExam(group);
+                              examController.addNewExam(group,groupId);
                             }
                           },
                           child: Obx(() => CustomButton(

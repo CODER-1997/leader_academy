@@ -23,9 +23,8 @@ class StudentController extends GetxController {
   TextEditingController surnameEdit = TextEditingController();
   TextEditingController phoneEdit = TextEditingController();
 
-   RxList selectedGroupId = [].obs;
-   RxList selectedGroups = [].obs;
-
+  RxList selectedGroupId = [].obs;
+  RxList selectedGroups = [].obs;
 
   RxBool isFreeOfCharge = false.obs;
 
@@ -56,8 +55,10 @@ class StudentController extends GetxController {
 
   Future<void> fetchStudents() async {
     students.clear();
-    QuerySnapshot querySnapshot =
-        await _firestore.collection('LeaderStudents').where('items.isDeleted',isEqualTo: false).get();
+    QuerySnapshot querySnapshot = await _firestore
+        .collection('LeaderStudents')
+        .where('items.isDeleted', isEqualTo: false)
+        .get();
     for (var doc in querySnapshot.docs) {
       students.add({
         'name': (doc.data() as Map<String, dynamic>)['items']['name'],
@@ -67,18 +68,18 @@ class StudentController extends GetxController {
         'id': doc.id,
       });
     }
-    print(students);
+    (students);
   }
 
   setValues(
     String name,
     String surname,
     String phone,
-   ) {
+  ) {
     nameEdit = TextEditingController(text: name);
     surnameEdit = TextEditingController(text: surname);
     phoneEdit = TextEditingController(text: phone);
-   }
+  }
 
   final CollectionReference _dataCollection =
       FirebaseFirestore.instance.collection('LeaderStudents');
@@ -95,7 +96,7 @@ class StudentController extends GetxController {
   TextEditingController yearlyFee = TextEditingController();
   TextEditingController paymentCode = TextEditingController();
 
-  void addNewStudent( String groupId,String subject) async {
+  void addNewStudent(String groupId, String subject) async {
     isLoading.value = true;
     try {
       StudentModel newData = StudentModel(
@@ -104,20 +105,21 @@ class StudentController extends GetxController {
           phone: phone.text.toString().removeAllWhitespace,
           payments: [],
           uniqueId: generateUniqueId(),
-           startedDay: paidDate.value,
+          startedDay: paidDate.value,
           isDeleted: false,
-           studyDays: [],
+          studyDays: [],
           isFreeOfcharge: isFreeOfCharge.value,
           orderInGroup: orderInGroup.value,
           exams: [],
           grades: [],
-          yeralyFee: yearlyFee.text.isNotEmpty ? int.parse(yearlyFee.text.removeAllWhitespace) : 0,
+          yeralyFee: yearlyFee.text.isNotEmpty
+              ? int.parse(yearlyFee.text.removeAllWhitespace)
+              : 0,
           paymentType: paymentType.value,
           homeWorks: [],
-           groups: [{
-             'groupId':groupId,
-             'subject':subject
-           }]);
+          groups: [
+            {'groupId': groupId, 'subject': subject}
+          ]);
       // Create a new document with an empty list
       await _dataCollection.add({
         'items': newData.toMap(),
@@ -156,56 +158,52 @@ class StudentController extends GetxController {
   //
   //student attach group
 
-   attachGroup (
+  attachGroup(
     String documentId,
     String groupId,
     String subject,
   ) async {
     isLoading.value = true;
-       try {
-        // Retrieve the document reference
-        DocumentReference documentReference = FirebaseFirestore.instance
-            .collection('LeaderStudents')
-            .doc(documentId);
+    try {
+      // Retrieve the document reference
+      DocumentReference documentReference = FirebaseFirestore.instance
+          .collection('LeaderStudents')
+          .doc(documentId);
 
-        // Get the current document snapshot
-        DocumentSnapshot documentSnapshot = await documentReference.get();
-        Map<String, dynamic> currentMap =
-            Map<String, dynamic>.from(documentSnapshot['items'] ?? {});
-        // Get the current array field value
-        List<dynamic> currentArray =
-            List<dynamic>.from(currentMap['groups'] ?? []);
-        // Append the new item to the array
+      // Get the current document snapshot
+      DocumentSnapshot documentSnapshot = await documentReference.get();
+      Map<String, dynamic> currentMap =
+          Map<String, dynamic>.from(documentSnapshot['items'] ?? {});
+      // Get the current array field value
+      List<dynamic> currentArray =
+          List<dynamic>.from(currentMap['groups'] ?? []);
+      // Append the new item to the array
 
-        currentArray.add({
-          'groupId':groupId,
-          'subject':subject
-        });
+      currentArray.add({'groupId': groupId, 'subject': subject});
 
-        // Update the document with the new array value
-        await documentReference.update({
-          'items.groups': currentArray,
-        });
+      // Update the document with the new array value
+      await documentReference.update({
+        'items.groups': currentArray,
+      });
 
-        // Optional: Provide feedback to the user
+      // Optional: Provide feedback to the user
 
-        payment.clear();
-        paidDate.value = '';
-        isLoading.value = false;
-        paymentComment.clear();
-        Get.back();
-      } catch (e) {
-        // Handle errors here
-        print('Error adding item to array: $e');
-        Get.snackbar(
-          'Error:${e}',
-          e.toString(),
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      }
-
+      payment.clear();
+      paidDate.value = '';
+      isLoading.value = false;
+      paymentComment.clear();
+      Get.back();
+    } catch (e) {
+      // Handle errors here
+      print('Error adding item to array: $e');
+      Get.snackbar(
+        'Error:${e}',
+        e.toString(),
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
   }
 
   void editStudent(String documentId) async {
@@ -222,13 +220,13 @@ class StudentController extends GetxController {
           _firestore.collection('LeaderStudents').doc(documentId);
 
       // Update the desired field
-       await documentReference.update({
+      await documentReference.update({
         'items.name': nameEdit.text,
         'items.surname': surnameEdit.text,
         'items.phone': phoneEdit.text,
-         'items.groups': selectedGroups,
+        'items.groups': selectedGroups,
         'items.startedDay': startedDay.value,
-         'items.isFreeOfcharge': isFreeOfCharge.value,
+        'items.isFreeOfcharge': isFreeOfCharge.value,
       });
       Get.back();
       isLoading.value = false;
@@ -240,31 +238,7 @@ class StudentController extends GetxController {
     isLoading.value = false;
   }
 
-  void updatePayment(String documentId , List payments) async {
-    isLoading.value = true;
 
-    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-    // Function to update a specific document field by document ID
-    try {
-      isLoading.value = true;
-
-      // Reference to the document
-      DocumentReference documentReference =   _firestore.collection('LeaderStudents').doc(documentId);
-
-      for (var payment in payments){
-        payment['subject']="Matematika";
-      }
-
-      await documentReference.update({
-        'items.payments': payments,
-      });
-    } catch (e) {
-      print('Error updating document field: $e');
-      isLoading.value = false;
-    }
-    isLoading.value = false;
-  }
 
   void recoverStudentItem(String documentId, String groupName) async {
     isLoading.value = true;
@@ -347,29 +321,27 @@ class StudentController extends GetxController {
 
   // Calculate payment
 
-  TextEditingController payment = TextEditingController( );
-   TextEditingController paymentComment = TextEditingController();
-   TextEditingController reasonOfBeingAbsent = TextEditingController();
+  TextEditingController payment = TextEditingController();
+  TextEditingController paymentComment = TextEditingController();
+  TextEditingController reasonOfBeingAbsent = TextEditingController();
 
-   setCode(String code){
-     paymentComment = TextEditingController(text: code);
-   }
+
+  setPaymentCode(String code){
+    paymentComment = TextEditingController(text: code);
+  }
 
   RxString selectedAbsenseReason = "".obs;
-
-
-
-
 
   RxString paidDate = ''.obs;
   RxString startedDay = ''.obs;
   static DateTime date = DateTime.now();
 
-  RxString selectedStudyDate = DateFormat('dd-MM-yyyy').format(date).toString().obs;
+  RxString selectedStudyDate =
+      DateFormat('dd-MM-yyyy').format(date).toString().obs;
   static DateTime now = DateTime.now();
 
   showDate(RxString when) {
-     showDatePicker(
+    showDatePicker(
             initialDate: date,
             firstDate: DateTime(2020),
             lastDate: DateTime(2100),
@@ -395,7 +367,7 @@ class StudentController extends GetxController {
 
   RxBool courseFee = true.obs;
 
-  void addPayment(String documentId, String paidDate,String subject) async {
+  void addPayment(String documentId, String paidDate, String subject) async {
     isLoading.value = true;
     if (payment.text.isNotEmpty) {
       try {
@@ -436,17 +408,17 @@ class StudentController extends GetxController {
           'courseFee': courseFee.value,
           'paymentCode': paymentComment.text,
           'id': generateUniqueId(),
-           'subject':subject
+          'subject': subject
         });
 
-         await documentReference.update({
+        await documentReference.update({
           'items.payments': currentArray,
         });
 
-         isLoading.value = false;
+        isLoading.value = false;
         Get.back();
-         paymentComment.clear();
-         payment.clear();
+        paymentComment.clear();
+        payment.clear();
       } catch (e) {
         // Handle errors here
         print('Error adding item to array: $e');
@@ -463,10 +435,7 @@ class StudentController extends GetxController {
 
   // Edit payment
 
-  void editPayment(
-    String documentId,
-    String uniqueId,
-  ) async {
+  void editPayment(String documentId, String uniqueId, String subject, ) async {
     isLoading.value = true;
     if (payment.text.isNotEmpty) {
       try {
@@ -497,7 +466,8 @@ class StudentController extends GetxController {
             'paidDate': paidDate.value,
             'paidSum': payment.text.removeAllWhitespace,
             'paymentCode': paymentComment.text,
-             'id': uniqueId
+            'id': uniqueId,
+            'subject': subject
           };
         }
 
@@ -582,78 +552,70 @@ class StudentController extends GetxController {
 
   // Check student study inteval by ..
 
-  void setStudyDay(
-    String documentId,
-    String groupId,
-    String studentId,
-    Map hasReason,
-    bool isAttended,
-    String subject
-  ) async {
+  void setStudyDay(String documentId, String groupId, String studentId,
+      Map hasReason, bool isAttended, String subject) async {
     isLoading.value = true;
-   // try {
-      // Retrieve the document reference
-      DocumentReference documentReference = FirebaseFirestore.instance
-          .collection('LeaderStudents')
-          .doc(documentId);
+    // try {
+    // Retrieve the document reference
+    DocumentReference documentReference =
+        FirebaseFirestore.instance.collection('LeaderStudents').doc(documentId);
 
-      // Get the current document snapshot
-      DocumentSnapshot documentSnapshot = await documentReference.get();
-      Map<String, dynamic> currentMap =
-          Map<String, dynamic>.from(documentSnapshot['items'] ?? {});
-      // Get the current array field value
-      List<dynamic> currentArray =
-          List<dynamic>.from(currentMap['studyDays'] ?? []);
+    // Get the current document snapshot
+    DocumentSnapshot documentSnapshot = await documentReference.get();
+    Map<String, dynamic> currentMap =
+        Map<String, dynamic>.from(documentSnapshot['items'] ?? {});
+    // Get the current array field value
+    List<dynamic> currentArray =   List<dynamic>.from(currentMap['studyDays'] ?? []);
 
-      // Append the new item to the array
+    // Append the new item to the array
 
-      // find element by month and year
-      int index = -1;
-      for (int i = 0; i < currentArray.length; i++) {
-        if (currentArray[i]['studyDay'] == selectedStudyDate.value && currentArray[i]['groupId'] == groupId) {
-          index = i;
-          break;
-        }
+    // find element by month and year
+    int index = -1;
+    for (int i = 0; i < currentArray.length; i++) {
+      if (currentArray[i]['studyDay'] == selectedStudyDate.value &&
+          currentArray[i]['groupId'] == groupId) {
+        index = i;
+        break;
       }
+    }
 
-      if (index == (-1)) {
-        currentArray.add({
-          'studyDay': selectedStudyDate.value,
-          'groupId': groupId,
-          'studentId': studentId,
-          'hasReason': hasReason,
-          'isAttended': isAttended,
-          'subject': subject,
-        });
-      } else {
-        currentArray[index] = {
-          'studyDay': selectedStudyDate.value,
-          'groupId': groupId,
-          'studentId': studentId,
-          'hasReason': hasReason,
-          'isAttended': isAttended,
-          'subject': subject,
-
-        };
-      }
-
-      reasonOfBeingAbsent.clear();
-      selectedAbsenseReason.value = "";
-      // else{
-      // currentArray.add({
-      //   'paidDate': paidDate,
-      //   'paidSum': payment.text.removeAllWhitespace,
-      //   'id': generateUniqueId()
-      // });
-      // }
-
-      // Update the document with the new array value
-      await documentReference.update({
-        'items.studyDays': currentArray,
+    if (index == (-1)) {
+      currentArray.add({
+        'studyDay': selectedStudyDate.value,
+        'groupId': groupId,
+        'studentId': studentId,
+        'hasReason': hasReason,
+        'isAttended': isAttended,
+        'subject': subject,
       });
+    } else {
+      currentArray[index] = {
+        'studyDay': selectedStudyDate.value,
+        'groupId': groupId,
+        'studentId': studentId,
+        'hasReason': hasReason,
+        'isAttended': isAttended,
+        'subject': subject,
+      };
+    }
 
-      // Optional: Provide feedback to the user
-      isLoading.value = false;
+    reasonOfBeingAbsent.clear();
+    selectedAbsenseReason.value = "";
+    // else{
+    // currentArray.add({
+    //   'paidDate': paidDate,
+    //   'paidSum': payment.text.removeAllWhitespace,
+    //   'id': generateUniqueId()
+    // });
+    // }
+
+    // Update the document with the new array value
+    await documentReference.update({
+      'items.studyDays': currentArray,
+    });
+
+    // Optional: Provide feedback to the user
+    isLoading.value = false;
     // } catch (e) {
     //   // Handle errors here
     //   print('Error adding item to array: $e');
@@ -686,15 +648,14 @@ class StudentController extends GetxController {
       Map<String, dynamic> currentMap =
           Map<String, dynamic>.from(documentSnapshot['items'] ?? {});
       // Get the current array field value
-      List<dynamic> currentArray =
-          List<dynamic>.from(currentMap['studyDays'] ?? []);
+      List<dynamic> currentArray =  List<dynamic>.from(currentMap['studyDays'] ?? []);
 
       // Append the new item to the array
 
       // find element by month and year
       int index = -1;
       for (int i = 0; i < currentArray.length; i++) {
-        if (currentArray[i]['studyDay'] == selectedStudyDate.value) {
+        if (currentArray[i]['studyDay'] == selectedStudyDate.value && currentArray[i]['groupId'] == groupId) {
           index = i;
           break;
         }

@@ -232,7 +232,7 @@ class Grading extends StatelessWidget {
                                                         }
                                                       }
 
-                                                      print(studentGrading);
+                                                      (studentGrading);
                                                     },
                                                   ),
                                                 )
@@ -292,7 +292,7 @@ class Grading extends StatelessWidget {
                 Get.back();
                 Get.to(Grading(groupId: groupId, groupName: groupName, gradeDate: gradeDate, gradeTime: gradeTime,));
               } else {
-                print('also working ... ');
+                ('also working ... ');
                 gradeController.addGrade(studentGrading[i]['id'], gradeDate,
                     gradeTime, studentGrading[i]['grade']);
               }

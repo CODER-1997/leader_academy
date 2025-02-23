@@ -42,7 +42,7 @@ class ExamsController extends GetxController {
   RxInt order = 0.obs;
   GetStorage box = GetStorage();
 
-  void addNewExam(String group) async {
+  void addNewExam(String group,String groupId) async {
     Get.back();
     isLoading.value = true;
     try {
@@ -50,7 +50,7 @@ class ExamsController extends GetxController {
           name: examName.text,
           questionNums: isTestTypeExam.value == false ? '100': examQuestionCount.text,
           date: DateTime.now().toString(),
-          group: group, isTestType: isTestTypeExam.value, isWarned: false);
+          group: group, isTestType: isTestTypeExam.value, isWarned: false, groupId: groupId);
       // Create a new document with an empty list
       await _dataCollection.add({
         'items': newData.toMap(),
@@ -182,54 +182,62 @@ class ExamsController extends GetxController {
 
   Future<File> generatePdf(List students) async {
     final pdf = pw.Document();
-    // Load the custom font
+
+    // Load custom font
     final fontData = await rootBundle.load("assets/fonts/Roboto-Regular.ttf");
     final ttf = pw.Font.ttf(fontData.buffer.asByteData());
-    pdf.addPage(
 
-      pw.Page(
-        build: (context) {
-          return pw.Table(
-            border: pw.TableBorder.all(),
-            children: [
-              // Table header row
-              pw.TableRow(
-                decoration: pw.BoxDecoration(color: PdfColors.grey300),
-                children: [
-                  pw.Text('№', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold)),
-                  pw.Text('Ismi', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold)),
-                  pw.Text('Familiyasi', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold)),
-                  pw.Text('Natijasi', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold)),
-                  pw.Text('Foizda', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold)),
-                ],
-              ),
-              // Table rows with conditional coloring based on grade
-              ...students.map((student) {
+    const int studentsPerPage = 50; // Number of students per page
+    int totalPages = (students.length / studentsPerPage).ceil();
 
+    for (int i = 0; i < totalPages; i++) {
+      final start = i * studentsPerPage;
+      final end = (start + studentsPerPage > students.length) ? students.length : (start + studentsPerPage);
 
-
-
-                return pw.TableRow(
-                  decoration: pw.BoxDecoration(color: student['color']),
+      pdf.addPage(
+        pw.Page(
+          build: (context) {
+            return pw.Table(
+              border: pw.TableBorder.all(),
+              children: [
+                // Table Header
+                pw.TableRow(
+                  decoration: pw.BoxDecoration(color: PdfColors.grey300),
                   children: [
-                    pw.Text(student['order'].toString().capitalizeFirst!, style: pw.TextStyle(font: ttf)),
-                    pw.Text(student['name'].toString().capitalizeFirst!, style: pw.TextStyle(font: ttf)),
-                    pw.Text(student['surname'].toString().capitalizeFirst!, style: pw.TextStyle(font: ttf)),
-                    pw.Text(student['grade'].toString(), style: pw.TextStyle(font: ttf)),
-                    pw.Text(student['percent'].toString() + "%", style: pw.TextStyle(font: ttf)),
+                    pw.Text('№', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold)),
+                    pw.Text('Ismi', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold)),
+                    pw.Text('Familiyasi', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold)),
+                    pw.Text('Natijasi', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold)),
+                    pw.Text('Foizda', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold)),
                   ],
-                );
-              }).toList(),
-            ],
-          );
-        },
-      ),
-    );
+                ),
 
+                // Table Rows
+                ...students.sublist(start, end).map((student) {
+                  return pw.TableRow(
+                    decoration: pw.BoxDecoration(color: student['color']),
+                    children: [
+                      pw.Text(student['order'].toString(), style: pw.TextStyle(font: ttf)),
+                      pw.Text(student['name'].toString().capitalizeFirst!, style: pw.TextStyle(font: ttf)),
+                      pw.Text(student['surname'].toString().capitalizeFirst!, style: pw.TextStyle(font: ttf)),
+                      pw.Text(student['grade'].toString(), style: pw.TextStyle(font: ttf)),
+                      pw.Text("${student['percent']}%", style: pw.TextStyle(font: ttf)),
+                    ],
+                  );
+                }).toList(),
+              ],
+            );
+          },
+        ),
+      );
+    }
+
+    // Save PDF
     final output = await getTemporaryDirectory();
-    final file = File("${output.path}/${DateTime.now()}.pdf");
+    final file = File("${output.path}/exam_results.pdf");
     await file.writeAsBytes(await pdf.save());
-    print(file);
+
+    print("PDF saved at: ${file.path}");
     return file;
   }
 
@@ -306,8 +314,7 @@ class ExamsController extends GetxController {
     final output = await getTemporaryDirectory();
     final file = File("${output.path}/${DateTime.now()}.pdf");
     await file.writeAsBytes(await pdf.save());
-    print(file);
-    return file;
+     return file;
   }
 
   void shareToTelegramIelts(File pdfFile,String title) async {

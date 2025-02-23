@@ -88,7 +88,7 @@ class TeachersController extends GetxController {
       TeacherName.clear();
       Get.back();
     } catch (e) {
-      print(e);
+      (e);
       Get.snackbar(
         'Error:${e}',
         e.toString(),
@@ -122,7 +122,7 @@ class TeachersController extends GetxController {
       Get.back();
 
     } catch (e) {
-      print('Error updating document field: $e');
+      ('Error updating document field: $e');
       isLoading.value = false;
     }
     isLoading.value = false;

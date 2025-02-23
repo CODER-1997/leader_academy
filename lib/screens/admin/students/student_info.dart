@@ -48,10 +48,10 @@ class _StudentInfoState extends State<StudentInfo> {
   }
   String calculateAverage(List exams) {
     dynamic val = 0;
-    if(exams.isNotEmpty){
+     if(exams.isNotEmpty){
 
       for(int i = 0 ; i < exams.length ; i++){
-        val += int.parse(exams[i]['howMany']) * 100/int.parse(exams[i]['from']);
+        val += int.parse(exams[i]['howMany'].toString().isNotEmpty ? exams[i]['howMany'].toString():'0') * 100/int.parse(exams[i]['from']);
       }
       val   = val/exams.length;
       return  "O'rtacha: ${val.toString().substring(0,2)} %";

@@ -16,23 +16,21 @@ class Groups extends StatefulWidget {
 }
 
 class _GroupsState extends State<Groups> {
-
   GroupController groupController = Get.put(GroupController());
   FireAuth authController = Get.put(FireAuth());
   StudentController studentController = Get.put(StudentController());
 
   var box = GetStorage();
 
+
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
         backgroundColor: Color(0xffe8e8e8),
         appBar: AppBar(
           backgroundColor: dashBoardColor,
           toolbarHeight: 64,
           actions: [
-
             IconButton(
                 onPressed: () {
                   authController.logOut();
@@ -69,49 +67,52 @@ class _GroupsState extends State<Groups> {
                       if (!snapshot.hasData || !snapshot.data!.exists) {
                         return Container(
                             width: Get.width,
-                            height: Get.height-120,
-                            child:
-                                Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                  Text('No teacher found'),
-                                  ],
-                                ));
+                            height: Get.height - 120,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text('No teacher found'),
+                              ],
+                            ));
                       }
                       // Extract the document data
-                      Map<String, dynamic> data = snapshot.data!.data() as Map<String, dynamic>;
+                       Map<String, dynamic> data =  snapshot.data!.data() as Map<String, dynamic>;
 
-                      if (snapshot.hasData) {
 
+
+                        if (snapshot.hasData) {
                         return data['items']['groups'].length != 0
                             ? Column(
                                 children: [
-                        for (int i = 0; i < data['items']['groups'] .toList()  .length;  i++)
+           for (int i = 0;  i <  data['items']['groups'] .toList()  .length;  i++)
                                     InkWell(
                                       onTap: () {
                                         authController.isBanned.value = data['items']['isBanned'];
 
-                                        if(  authController.isBanned.value == true) {
+                                        if (authController.isBanned.value ==
+                                            true) {
                                           Get.snackbar(
                                             duration: Duration(seconds: 5),
-                                            icon: Icon(Icons.block,color: Colors.white,),
+                                            icon: Icon(
+                                              Icons.block,
+                                              color: Colors.white,
+                                            ),
                                             "Xatolik",
                                             "Akkaunt bloklangan",
                                             snackPosition: SnackPosition.TOP,
                                             backgroundColor: Colors.red,
                                             colorText: Colors.white,
                                           );
-                                        }
+                                        } else {
 
-                                       else {
-                                          Get.to(
-                                              StudentsByGroup(
-                                              groupName: data['items']['groups'][i]['group_name'],
-                                              groupId: data['items']['groups'][i]['group_id'],
-                                                groupDocId: snapshot.data!.id,
-                                                subject: data['items']['groups'][i]['subject'],
-                                          ));
+                                            print('Group doc id ${snapshot.data!.id}');
+                                          // Get.to(StudentsByGroup(
+                                          //   groupName: data['items']['groups'][i]['group_name'],
+                                          //   groupId:  data['items']['groups'][i]['group_id'],
+                                          //   groupDocId:snapshot.data!.id,
+                                          //   subject: data['items']['groups'][i]['subject'],
+                                          // ));
                                         }
                                       },
                                       child: Container(
@@ -284,21 +285,24 @@ class _GroupsState extends State<Groups> {
                                 ],
                               )
                             : Container(
-                          height: Get.height/1.5,
-                              child: Center(
+                                height: Get.height / 1.5,
+                                child: Center(
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
                                     children: [
                                       Image.asset(
                                         'assets/empty.png',
-                                        width: 122,
+                                        width: 80,
                                       ),
-                                      SizedBox(height: 16,),
+                                      SizedBox(
+                                        height: 2,
+                                      ),
                                       Text(
-                                        'You have not groups ',
+                                        'Sizda guruhlar mavjud emas',
                                         style: TextStyle(
-                                            color: Colors.black, fontSize: 20),
+                                            color: Colors.black, fontSize: 12),
                                       ),
                                       SizedBox(
                                         height: 16,
@@ -306,7 +310,7 @@ class _GroupsState extends State<Groups> {
                                     ],
                                   ),
                                 ),
-                            );
+                              );
                       }
                       // If no data available
 

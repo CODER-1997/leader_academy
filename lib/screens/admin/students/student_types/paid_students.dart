@@ -23,7 +23,6 @@ class PaidStudents extends StatelessWidget {
     String result = "";
 
     for(var item in list){
-      print("List $item");
 
       if(isDateInCurrentMonth(item['paidDate'])){
         result = item['paidDate'];

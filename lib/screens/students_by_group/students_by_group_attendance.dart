@@ -86,34 +86,17 @@ class _AttendanceState extends State<Attendance> {
     return Colors.green;
   }
 
-  String _searchText = '';
-
-  bool isStudentInGroup(String groupId, List groups) {
-    bool inGroup = false;
-
-    for (var item in groups) {
-      if (item['groupId'] == groupId) {
-        inGroup = true;
-        break;
-      }
-    }
-
-    return inGroup;
-  }
-
-  String setName(String name,String fam) {
+  String setName(String name, String fam) {
     String txt = box.read("attendance_text").toString();
     txt = txt.replaceAll("#ismi", "$name".capitalizeFirst!);
     txt = txt.replaceAll("#fam", "$fam".capitalizeFirst!);
     txt = txt.replaceAll("#fan", "${widget.subject}".capitalizeFirst!);
     txt = txt.replaceAll("#guruh", "${widget.groupName}".capitalizeFirst!);
-    txt = txt.replaceAll("#sana", "${DateFormat('dd-MM-yyyy').format(DateTime.now()).toString()}");
+    txt = txt.replaceAll("#sana",
+        "${DateFormat('dd-MM-yyyy').format(DateTime.now()).toString()}");
 
     return txt;
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -147,17 +130,14 @@ class _AttendanceState extends State<Attendance> {
             ),
             SizedBox(height: 4),
             StreamBuilder(
-                stream: _searchText.isEmpty
-                    ? FirebaseFirestore.instance
-                        .collection('LeaderStudents')
-                        .snapshots()
-                    : FirebaseFirestore.instance
-                        .collection('LeaderStudents')
-                        .where('items.name',
-                            isGreaterThanOrEqualTo: _searchText)
-                        .where('items.name',
-                            isLessThanOrEqualTo: _searchText + '\uf8ff')
-                        .snapshots(),
+                stream:   FirebaseFirestore.instance
+                        .collection('LeaderStudents').where('items.groups',arrayContains: {
+                          "groupId":widget.groupId,
+                  'subject':widget.subject
+
+                }).where('items.isDeleted',isEqualTo: false)
+                        .snapshots(includeMetadataChanges: true),
+
                 builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(child: CircularProgressIndicator());
@@ -170,8 +150,7 @@ class _AttendanceState extends State<Attendance> {
 
                     students.clear();
                     for (int i = 0; i < list.length; i++) {
-      if (isStudentInGroup(widget.groupId, list[i]['items']['groups'].toList()) &&
-                          list[i]['items']['isDeleted'] == false) {
+
                         studentList.add(list[i]);
                         students.add({
                           'name': list[i]['items']['name'],
@@ -185,14 +164,9 @@ class _AttendanceState extends State<Attendance> {
                           'yearlyFee': list[i]['items']['yeralyFee'].toString(),
                           'isFreeOfcharge': list[i]['items']['isFreeOfcharge'],
                         });
-                      }
-      students .sort((a, b) => (a['surname']).compareTo(b['surname']));
 
-                    }
-                    students .sort((a, b) => (a['surname']).compareTo(b['surname']));
-                    for(int i  = 0 ; i < students.length ; i++){
-                      studentController.updatePayment(students[i]['id'], students[i]['payments']);
-
+                      students.sort(
+                          (a, b) => (a['surname']).compareTo(b['surname']));
                     }
 
                     return students.length != 0
@@ -266,14 +240,18 @@ class _AttendanceState extends State<Attendance> {
                                     child: GestureDetector(
                                       onLongPress: () {
                                         isStudentChoosen.value = true;
-                                        if(box.read('attendance_text') == null){
-                                           box.write('attendance_text', "Farzandingiz #ismi #fam  #fan #guruh darsiga kelmadi . #sana");
+                                        if (box.read('attendance_text') ==
+                                            null) {
+                                          box.write('attendance_text',
+                                              "Farzandingiz #ismi #fam  #fan #guruh darsiga kelmadi . #sana");
                                         }
                                       },
                                       onTap: () {
-                                        if ((box.read('isLogged') == '004422' || box.read('isLogged') == '0094') &&
+                                        if ((box.read('isLogged') == '004422' ||
+                                                box.read('isLogged') ==
+                                                    '0094') &&
                                             isStudentChoosen.value == false) {
-                                          print("XXX" + widget.subject);
+
                                           Get.to(StudentInfo(
                                             studentId: students[i]['id'],
                                             subject: widget.subject,
@@ -412,8 +390,8 @@ class _AttendanceState extends State<Attendance> {
                                                                     .toString()
                                                                     .capitalizeFirst! +
                                                                 " " +
-                                                                students[i][
-                                                                        'name']
+                                                                students[i]
+                                                                        ['name']
                                                                     .toString()
                                                                     .capitalizeFirst!,
                                                             style: TextStyle(
@@ -424,16 +402,16 @@ class _AttendanceState extends State<Attendance> {
                                                                 TextOverflow
                                                                     .ellipsis,
                                                           ),
-                                                          students[i]['phone']
-                                                                  .toString()
-                                                                  .isEmpty
-                                                              ? Text(
-                                                                  "Phone number is empty",
-                                                                  style: TextStyle(
-                                                                      color: Colors
-                                                                          .red),
-                                                                )
-                                                              : SizedBox()
+                                                          // students[i]['phone']
+                                                          //         .toString()
+                                                          //         .isEmpty
+                                                          //     ? Text(
+                                                          //         "Phone number is empty",
+                                                          //         style: TextStyle(
+                                                          //             color: Colors
+                                                          //                 .red),
+                                                          //       )
+                                                          //     : SizedBox()
                                                         ],
                                                       ),
                                                     ),
@@ -572,46 +550,7 @@ class _AttendanceState extends State<Attendance> {
                                             ),
                                             Row(
                                               children: [
-                                                // getReason(
-                                                //             students[i]
-                                                //                 ['studyDays'],
-                                                //             studentController
-                                                //                 .selectedStudyDate
-                                                //                 .value,
-                                                //             widget.groupId)
-                                                //         .isNotEmpty
-                                                //     ? Container(
-                                                //         width: Get.width / 8,
-                                                //         alignment:
-                                                //             Alignment.center,
-                                                //         margin: EdgeInsets.only(
-                                                //             right: 4, top: 8),
-                                                //         padding: EdgeInsets
-                                                //             .symmetric(
-                                                //                 horizontal: 4,
-                                                //                 vertical: 4),
-                                                //         decoration: BoxDecoration(
-                                                //             color: Colors.red,
-                                                //             borderRadius:
-                                                //                 BorderRadius
-                                                //                     .circular(
-                                                //                         122),
-                                                //             border: Border.all(
-                                                //                 color:
-                                                //                     Colors.red,
-                                                //                 width: 2)),
-                                                //         child: Text(
-                                                //           "${getReason(students[i]['studyDays'], studentController.selectedStudyDate.value, widget.groupId)}",
-                                                //           style: appBarStyle.copyWith(
-                                                //               color:
-                                                //                   Colors.white,
-                                                //               fontSize: 8,
-                                                //               overflow:
-                                                //                   TextOverflow
-                                                //                       .ellipsis),
-                                                //         ),
-                                                //       )
-                                                //     : SizedBox(),
+
                                                 InkWell(
                                                   onTap: () {
                                                     if (checkStatus(
@@ -631,8 +570,7 @@ class _AttendanceState extends State<Attendance> {
                                                               {
                                                                 'hasReason':
                                                                     false,
-                                                                'commentary':
-                                                                    "",
+
                                                               },
                                                               true);
                                                     } else {
@@ -645,8 +583,7 @@ class _AttendanceState extends State<Attendance> {
                                                               {
                                                                 'hasReason':
                                                                     false,
-                                                                'commentary':
-                                                                    "",
+
                                                               },
                                                               true,
                                                               widget.subject);
@@ -674,7 +611,7 @@ class _AttendanceState extends State<Attendance> {
                                                                         widget
                                                                             .groupId) ==
                                                                     'notGiven'
-                                                            ? .3
+                                                            ? .1
                                                             : 1),
                                                         borderRadius:
                                                             BorderRadius
@@ -735,8 +672,7 @@ class _AttendanceState extends State<Attendance> {
                                                               {
                                                                 'hasReason':
                                                                     false,
-                                                                'commentary':
-                                                                    "",
+
                                                               },
                                                               true);
                                                     } else {
@@ -767,69 +703,55 @@ class _AttendanceState extends State<Attendance> {
                                                               width: Get.width -
                                                                   64,
                                                               height:
-                                                                  Get.height /
-                                                                      3,
+                                                                 150,
                                                               child: Column(
                                                                 mainAxisAlignment:
                                                                     MainAxisAlignment
                                                                         .spaceBetween,
                                                                 children: [
-                                                                  Text(
-                                                                      "Reason"),
-                                                                  TextFormField(
-                                                                    maxLines: 2,
 
-                                                                    controller:
-                                                                        studentController
-                                                                            .reasonOfBeingAbsent,
-                                                                    decoration:
-                                                                        buildInputDecoratione(
-                                                                            'Reason (Optional)'),
-                                                                    // validator: (value) {
-                                                                    //   if (value!.isEmpty) {
-                                                                    //     return "Maydonlar bo'sh bo'lmasligi kerak";
-                                                                    //   }
-                                                                    //   return null;
-                                                                    // },
-                                                                  ),
                                                                   Obx(() => Row(
                                                                         children: [
-                                                                          InkWell(
-                                                                            onTap:
-                                                                                () {
-                                                                              studentController.selectedAbsenseReason.value = "Sababli";
-                                                                            },
-                                                                            child:
-                                                                                Container(
-                                                                              decoration: BoxDecoration(color: studentController.selectedAbsenseReason.value == "Sababli" ? Colors.red : Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.black)),
-                                                                              child: Text(
-                                                                                "Sababli",
-                                                                                style: TextStyle(
-                                                                                  color: studentController.selectedAbsenseReason.value == "Sababli" ? Colors.white : Colors.black,
+                                                                          Expanded(
+                                                                            child: InkWell(
+                                                                              onTap:
+                                                                                  () {
+                                                                                studentController.selectedAbsenseReason.value = "Sababli";
+                                                                              },
+                                                                              child:
+                                                                                  Container(
+                                                                                decoration: BoxDecoration(color: studentController.selectedAbsenseReason.value == "Sababli" ? Colors.red : Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.black)),
+                                                                                child: Text(
+                                                                                  "Sababli",
+                                                                                  style: TextStyle(
+                                                                                    color: studentController.selectedAbsenseReason.value == "Sababli" ? Colors.white : Colors.black,
+                                                                                  ),
                                                                                 ),
+                                                                                padding: EdgeInsets.all(8),
                                                                               ),
-                                                                              padding: EdgeInsets.all(8),
                                                                             ),
                                                                           ),
                                                                           SizedBox(
                                                                             width:
                                                                                 8,
                                                                           ),
-                                                                          InkWell(
-                                                                            onTap:
-                                                                                () {
-                                                                              studentController.selectedAbsenseReason.value = "Sababsiz";
-                                                                            },
-                                                                            child:
-                                                                                Container(
-                                                                              decoration: BoxDecoration(color: studentController.selectedAbsenseReason.value == "Sababsiz" ? Colors.red : Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.black)),
-                                                                              child: Text(
-                                                                                "Sababsiz",
-                                                                                style: TextStyle(
-                                                                                  color: studentController.selectedAbsenseReason.value == "Sababsiz" ? Colors.white : Colors.black,
+                                                                          Expanded(
+                                                                            child: InkWell(
+                                                                              onTap:
+                                                                                  () {
+                                                                                studentController.selectedAbsenseReason.value = "Sababsiz";
+                                                                              },
+                                                                              child:
+                                                                                  Container(
+                                                                                decoration: BoxDecoration(color: studentController.selectedAbsenseReason.value == "Sababsiz" ? Colors.red : Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.black)),
+                                                                                child: Text(
+                                                                                  "Sababsiz",
+                                                                                  style: TextStyle(
+                                                                                    color: studentController.selectedAbsenseReason.value == "Sababsiz" ? Colors.white : Colors.black,
+                                                                                  ),
                                                                                 ),
+                                                                                padding: EdgeInsets.all(8),
                                                                               ),
-                                                                              padding: EdgeInsets.all(8),
                                                                             ),
                                                                           ),
                                                                         ],
@@ -852,23 +774,20 @@ class _AttendanceState extends State<Attendance> {
                                                                             students[i]['uniqueId'],
                                                                             {
                                                                               'hasReason': studentController.selectedAbsenseReason.value == "Sababli" ? true : false,
-                                                                              'commentary': studentController.reasonOfBeingAbsent.text.isEmpty ? studentController.selectedAbsenseReason.value : studentController.reasonOfBeingAbsent.text,
-                                                                            },
+                                                                             },
                                                                             false,
                                                                             widget.subject);
 
                                                                         Get.back();
                                                                       }
                                                                     },
-                                                                    child: Obx(() => CustomButton(
+                                                                    child:   CustomButton(
                                                                         color: Colors
                                                                             .red,
-                                                                        isLoading: studentController
-                                                                            .isLoading
-                                                                            .value,
+                                                                        isLoading: false,
                                                                         text: 'confirm'
                                                                             .tr
-                                                                            .capitalizeFirst!)),
+                                                                            .capitalizeFirst!),
                                                                   )
                                                                 ],
                                                               ),
@@ -878,65 +797,78 @@ class _AttendanceState extends State<Attendance> {
                                                       );
                                                     }
                                                   },
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                        color: Colors.red.withOpacity(checkStatus(
-                                                                        students[i]
-                                                                            [
-                                                                            'studyDays'],
-                                                                        studentController
-                                                                            .selectedStudyDate
-                                                                            .value,
-                                                                        widget
-                                                                            .groupId) ==
-                                                                    'notChecked' ||
+                                                  child: Stack(
+                                                  alignment:Alignment.topRight,
+                                                    children: [
+                                                      Container(
+                                                        decoration: BoxDecoration(
+                                                            color: Colors.red.withOpacity(
                                                                 checkStatus(
-                                                                        students[i]
-                                                                            [
-                                                                            'studyDays'],
-                                                                        studentController
-                                                                            .selectedStudyDate
-                                                                            .value,
-                                                                        widget
-                                                                            .groupId) ==
-                                                                    'true'
-                                                            ? .3
-                                                            : 1),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(4)),
-                                                    padding:
-                                                        EdgeInsets.symmetric(
-                                                            vertical: 8,
-                                                            horizontal: 16),
-                                                    child: Text(
-                                                      "Yo'q",
-                                                      style: TextStyle(
-                                                          color: checkStatus(
-                                                                          students[i][
-                                                                              'studyDays'],
-                                                                          studentController
-                                                                              .selectedStudyDate
-                                                                              .value,
-                                                                          widget
-                                                                              .groupId) ==
-                                                                      'notChecked' ||
-                                                                  checkStatus(
-                                                                          students[i]
-                                                                              [
-                                                                              'studyDays'],
-                                                                          studentController
-                                                                              .selectedStudyDate
-                                                                              .value,
-                                                                          widget
-                                                                              .groupId) ==
-                                                                      'true'
-                                                              ? Colors.red
-                                                              : Colors.white,
-                                                          fontSize: 16,
-                                                          fontWeight:
-                                                              FontWeight.w900),
-                                                    ),
+                                                                            students[i]
+                                                                                [
+                                                                                'studyDays'],
+                                                                            studentController
+                                                                                .selectedStudyDate
+                                                                                .value,
+                                                                            widget
+                                                                                .groupId) ==
+                                                                        'notChecked' ||
+                                                                    checkStatus(
+                                                                            students[i]
+                                                                                [
+                                                                                'studyDays'],
+                                                                            studentController
+                                                                                .selectedStudyDate
+                                                                                .value,
+                                                                            widget
+                                                                                .groupId) ==
+                                                                        'true'
+                                                                ? .1
+                                                                : 1),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(4)),
+                                                        padding:
+                                                            EdgeInsets.symmetric(
+                                                                vertical: 8,
+                                                                horizontal: 16),
+                                                        child: Text(
+                                                          "Yo'q",
+                                                          style: TextStyle(
+                                                              color: checkStatus(
+                                                                              students[i][
+                                                                                  'studyDays'],
+                                                                              studentController
+                                                                                  .selectedStudyDate
+                                                                                  .value,
+                                                                              widget
+                                                                                  .groupId) ==
+                                                                          'notChecked' ||
+                                                                      checkStatus(
+                                                                              students[i]
+                                                                                  [
+                                                                                  'studyDays'],
+                                                                              studentController
+                                                                                  .selectedStudyDate
+                                                                                  .value,
+                                                                              widget
+                                                                                  .groupId) ==
+                                                                          'true'
+                                                                  ? Colors.red
+                                                                  : Colors.white,
+                                                              fontSize: 16,
+                                                              fontWeight:
+                                                                  FontWeight.w900),
+                                                        ),
+                                                      ),
+                                                      getReason(
+                                                          students[i]
+                                                          ['studyDays'],
+                                                          studentController
+                                                              .selectedStudyDate
+                                                              .value,
+                                                          widget.groupId) == "Sababli" ?      Icon(Icons.star,color:CupertinoColors.systemYellow,):SizedBox()
+                                                    ],
                                                   ),
                                                 ),
 
@@ -1064,7 +996,7 @@ class _AttendanceState extends State<Attendance> {
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12)),
                             width: Get.width,
-                            height: 180,
+                            height: 150,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1074,15 +1006,16 @@ class _AttendanceState extends State<Attendance> {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     SizedBox(
-                                      height: 16,
+                                      height: 8,
                                     ),
                                     Text(
                                       'Rostdanham shu raqamlarga sms yuborilsinmi ?',
-                                      style: appBarStyle.copyWith(),
+                                      style: appBarStyle.copyWith(fontSize: 16),
                                       textAlign: TextAlign.center,
+
                                     ),
                                     SizedBox(
-                                      height: 16,
+                                      height: 8,
                                     ),
                                   ],
                                 ),
@@ -1092,8 +1025,7 @@ class _AttendanceState extends State<Attendance> {
                                   children: [
                                     TextButton(
                                       onPressed: () async {
-                                        groupController
-                                            .setSmsDate(widget.groupDocId);
+                                        groupController.setSmsDate(widget.groupDocId);
 
                                         Attendance.messageLoader.value = true;
                                         for (int i = 0;
@@ -1105,7 +1037,13 @@ class _AttendanceState extends State<Attendance> {
                                                   studentController
                                                       .selectedStudyDate.value,
                                                   widget.groupId) ==
-                                              'false') {
+                                              'false' && getReason(
+                                              students[i]
+                                              ['studyDays'],
+                                              studentController
+                                                  .selectedStudyDate
+                                                  .value,
+                                              widget.groupId) == "Sababsiz") {
                                             if (await Permission
                                                     .sms.isGranted &&
                                                 selectedStudents[i]['phone']
@@ -1113,16 +1051,16 @@ class _AttendanceState extends State<Attendance> {
                                                     .isNotEmpty) {
                                               _smsService.sendSMS(
                                                   selectedStudents[i]['phone'],
-                                                  setName(selectedStudents[i]
-                                                      ['name'],
+                                                  setName(
                                                       selectedStudents[i]
-                                                      ['surname']));
+                                                          ['name'],
+                                                      selectedStudents[i]
+                                                          ['surname']));
                                             }
                                           } else {
                                             print('Sms yuborilmadi');
                                           }
-                                          await Future.delayed(
-                                              Duration(seconds: 1));
+
                                         }
 
                                         Attendance.messageLoader.value = false;
@@ -1140,6 +1078,7 @@ class _AttendanceState extends State<Attendance> {
                                           borderRadius: 8,
                                           margin: EdgeInsets.all(10),
                                         );
+                                        Navigator.pop(context);
                                       },
                                       child: Text(
                                         'Tasdiqlash'.tr.capitalizeFirst!,

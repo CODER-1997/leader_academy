@@ -8,6 +8,9 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:leader/screens/students_by_group/simple_exam_as_img.dart';
+import 'package:lottie/lottie.dart';
+import 'package:pdf/pdf.dart';
 import 'package:screenshot/screenshot.dart';
 import '../../constants/custom_widgets/gradient_button.dart';
 import '../../constants/form_field.dart';
@@ -64,17 +67,15 @@ class _ExamResultsState extends State<ExamResults> {
     return hasTaken;
   }
 
-  // PdfColor getColor(double num) {
-  //   if (num > 85) {
-  //     return PdfColors.green;
-  //   } else if (num >= 71 && num <= 85) {
-  //     return PdfColors.yellow;
-  //   } else if (num >= 56 && num <= 70) {
-  //     return PdfColors.pinkAccent;
-  //   } else {
-  //     return PdfColors.red;
-  //   }
-  // }
+  PdfColor getColor(double num) {
+    if (num >= 70) {
+      return PdfColors.green;
+    } else if (num >= 50 && num <= 69) {
+      return PdfColors.yellow;}
+    else {
+      return PdfColors.red;
+    }
+  }
 
   RxBool smsSendLoader = false.obs;
 
@@ -145,7 +146,30 @@ class _ExamResultsState extends State<ExamResults> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return       Obx(()=>smsSendLoader.value ? Scaffold(body: Container(
+      height: Get.height,
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+          color: Colors.white, borderRadius: BorderRadius.circular(12)),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            SizedBox(
+              height: Get.height / 12,
+            ),
+            Lottie.asset('assets/lottie/mail_sending.json'),
+            Text(
+              'Smslar yuborilyapti , ozroq kuting...',
+              style: appBarStyle.copyWith(fontSize: 16),
+            ),
+            SizedBox(
+              height: Get.height / 3,
+            )
+          ],
+        ),
+      ),
+    ),): Scaffold(
       backgroundColor: Color(0xffe8e8e8),
       appBar: AppBar(
         title: Text(widget.examTitle),
@@ -313,8 +337,7 @@ class _ExamResultsState extends State<ExamResults> {
                                                         }
                                                       }
 
-                                                      print(studentExams);
-                                                    },
+                                                     },
                                                   ),
                                                 )
                                               : Text(
@@ -401,295 +424,309 @@ class _ExamResultsState extends State<ExamResults> {
                           style: TextStyle(color: Colors.white, fontSize: 16),
                         )))
                 : Expanded(
-                    child: InkWell(
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return Dialog(
-                              backgroundColor: Colors.white,
-                              insetPadding: EdgeInsets.symmetric(horizontal: 16),
-                              shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12.0)),
-                              //this right here
-                              child: Container(
-                                padding: EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(12)),
-                                width: Get.width,
-                                height: 180,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.center,
-                                      children: [
-                                        SizedBox(
-                                          height: 16,
-                                        ),
-                                        Text(
-                                          'Rostdanham shu raqamlarga sms yuborilsinmi ?',
-                                          style: appBarStyle.copyWith(),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        SizedBox(
-                                          height: 16,
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        TextButton(
-                                          onPressed: () async {
-                                            smsSendLoader.value = true;
-                                            List _students = [];
-                                            for (var item in students) {
-                                              int currentExamResult = 0;
-                                              for (var exam in item['exams']) {
-                                                if (exam['examDate'] == widget.examDate) {
-                                                  currentExamResult =
-                                                  exam['howMany'].toString().isEmpty
-                                                      ? (-100)
-                                                      : int.parse(exam['howMany']);
-                                                  break;
-                                                }
-                                              }
-                                              _students.add({
-                                                'name': item['name'],
-                                                'phone': item['phone'],
-                                                'surname': item['surname'],
-                                                'grade': currentExamResult,
-                                                "questionCount": widget.examCount,
-                                                'percent': int.parse(((currentExamResult /
-                                                    int.parse(widget.examCount)) *
-                                                    100)
-                                                    .toStringAsFixed(0)),
-                                              });
-                                            }
-                                            _students.sort( (a, b) => b['percent'].compareTo(a['percent']));
-                                            smsSendLoader.value = true;
-
-                                             for (int i = 0 ; i < _students.length ; i++  ) {
-                                               Future.delayed(Duration(seconds: 11));
-
-                                              if (_students[i]['grade'].toString()!="0" && _students[i]['grade'].toString().isNotEmpty) {
-                                                print("ASAS" + _students[i]['grade'].toString());
-                                                print(smsSendLoader.value);
-
-                                                _smsService.sendSMS(
-                                                    _students[i]['phone'],
-                                                    setName(
-                                                        _students[i]['name'],
-                                                        _students[i]['surname'],
-                                                        _students[i]['percent'].toString() + "%",
-                                                        widget.subject));
-                                              }
-                                              else {
-                                                print("ASAS" + _students[i]['grade'].toString());
-
-                                              }
-
-
-                                            }
-                                            examsController.setWarningExam(widget.examDocId);
-                                            smsSendLoader.value = false;
-
-                                           //  Get.snackbar(
-                                           //    'Xabar', // Title
-                                           //    'Xabar yuborildi',
-                                           //    // Message
-                                           //    snackPosition: SnackPosition.BOTTOM,
-                                           //    // Position of the snackbar
-                                           //    backgroundColor: Colors.green,
-                                           //    colorText: Colors.white,
-                                           //    borderRadius: 8,
-                                           //    margin: EdgeInsets.all(10),
-                                           //  );
-                                           //
-                                           // Navigator.pop(context);
-
-
-                                          },
-                                          child: Text(
-                                            'Tasdiqlash'.tr.capitalizeFirst!,
-                                            style: appBarStyle.copyWith(
-                                                color: Colors.green),
+                  child: Row(
+                    children: [
+                      Expanded(
+                          child: InkWell(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return Dialog(
+                                    backgroundColor: Colors.white,
+                                    insetPadding: EdgeInsets.symmetric(horizontal: 16),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12.0)),
+                                    //this right here
+                                    child: Container(
+                                      padding: EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(12)),
+                                      width: Get.width,
+                                      height: 250,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.center,
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            crossAxisAlignment: CrossAxisAlignment.center,
+                                            children: [
+                                              SizedBox(
+                                                height: 16,
+                                              ),
+                                              Text(
+                                                'Rostdanham shu raqamlarga sms yuborilsinmi ?',
+                                                style: appBarStyle.copyWith(),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              SizedBox(
+                                                height: 16,
+                                              ),
+                                            ],
                                           ),
-                                        ),
-                                        TextButton(
-                                            onPressed: Get.back,
-                                            child: Text(
-                                              'Bekor',
-                                              style: appBarStyle.copyWith(
-                                                  color: Colors.red),
-                                            )),
-                                      ],
-                                    )
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
-                        );
+                                          Row(
+                                            mainAxisAlignment:
+                                            MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              TextButton(
+                                                onPressed: () async {
+                                                  Navigator.pop(context);
+                  
+                                                  smsSendLoader.value = true;
+                                                  List _students = [];
+                                                  List _students2 = [];
+                                                  for (var item in students) {
+                                                    int currentExamResult = 0;
+                                                    for (var exam in item['exams']) {
+                                                      if (exam['examDate'] == widget.examDate) {
+                                                        currentExamResult =
+                                                        exam['howMany'].toString().isEmpty
+                                                            ? (-100)
+                                                            : int.parse(exam['howMany']);
+                                                        break;
+                                                      }
+                                                    }
+                  
+                                                    _students.add({
+                                                      'name': item['name'],
+                                                      'phone': item['phone'],
+                                                      'surname': item['surname'],
+                                                      'grade': currentExamResult,
+                                                      "questionCount": widget.examCount,
+                                                      'percent': int.parse(((currentExamResult /
+                                                          int.parse(widget.examCount)) *
+                                                          100)
+                                                          .toStringAsFixed(0)),
+                                                    });
+                                                  }
+                                                  for(var item in _students){
+                                                    if(item['grade']!=0 && item['percent']!=0){
+                                                      _students2.add(item);
+                                                    }
+                                                  }
+                  
+                  
+                  
+                  
+                  
+                  
+                  
+                                                   for (int i = 0 ; i < _students2.length ; i++  ) {
+                  
+                  
+                  
+                                                      _smsService.sendSMS(
+                                                          _students2[i]['phone'],
+                                                          setName(
+                                                              _students2[i]['name'],
+                                                              _students2[i]['surname'],
+                                                              _students2[i]['percent'].toString() + "%",
+                                                              widget.subject));
+                  
+                  
+                  
+                  
+                  
+                                                  }
+                                                  examsController.setWarningExam(widget.examDocId);
+                                                  smsSendLoader.value = false;
+                  
+                                                  Get.snackbar(
+                                                    'Xabar', // Title
+                                                    'Xabar yuborildi',
+                                                    // Message
+                                                    snackPosition: SnackPosition.BOTTOM,
+                                                    // Position of the snackbar
+                                                    backgroundColor: Colors.green,
+                                                    colorText: Colors.white,
+                                                    borderRadius: 8,
+                                                    margin: EdgeInsets.all(10),
+                                                  );
+                  
+                  
+                  
+                                                },
+                                                child: Text(
+                                                  'Tasdiqlash'.tr.capitalizeFirst!,
+                                                  style: appBarStyle.copyWith(
+                                                      color: Colors.green),
+                                                ),
+                                              ),
+                                              TextButton(
+                                                  onPressed: Get.back,
+                                                  child: Text(
+                                                    'Bekor',
+                                                    style: appBarStyle.copyWith(
+                                                        color: Colors.red),
+                                                  )),
+                                            ],
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                  
+                            },
+                            child: Obx(()=> CustomButton(
+                              isLoading: smsSendLoader.value,
+                              text: "Sms yuborish",
+                              color: Colors.green,
+                            ))),
+                          ),
+                      SizedBox(width: 16,),
+                      Expanded(
+                          child: InkWell(
+                              onTap: () async {
+                                for (int i = 0; i < studentExams.length; i++) {
+                                  if (isAlreadyTakenExam(studentExams[i]['exams'])) {
+                                    studentController.editExam(
+                                        studentExams[i]['id'],
+                                        examId(studentExams[i]['exams']),
+                                        widget.examCount,
+                                        studentExams[i]['count'],
+                                        widget.examTitle,
+                                        widget.examDate);
+                                  } else {
+                                    print('also working ... ');
+                                    studentController.addExam(
+                                        studentExams[i]['id'],
+                                        widget.examDate,
+                                        widget.examCount,
+                                        studentExams[i]['count'],
+                                        widget.examTitle);
+                                  }
+                  
+                                  Future.delayed(Duration(milliseconds: 111));
+                                }
+                                isEdit.value = false;
+                                // And send telegram on pdf format  ...
+                                List _students = [];
+                                for (var item in students) {
+                                  int currentExamResult = 0;
+                                  for (var exam in item['exams']) {
+                                    if (exam['examDate'] == widget.examDate) {
+                                      currentExamResult = exam['howMany'].toString().isEmpty
+                                          ? 0
+                                          : int.parse(exam['howMany']);
+                                      break;
+                                    }
+                                  }
+                  
+                                  _students.add({
+                                    'order': "",
+                                    'name': item['name'],
+                                    'surname': item['surname'],
+                                    'grade': currentExamResult,
+                                    "questionCount": widget.examCount,
+                                    'percent': double.parse(
+                                        ((currentExamResult / int.parse(widget.examCount)) *
+                                            100)
+                                            .toStringAsFixed(2)),
+                                    'color': getColor(double.parse(
+                                        ((currentExamResult / int.parse(widget.examCount)) *
+                                            100)
+                                            .toStringAsFixed(2)))
+                                  });
+                                }
+                                _students
+                                    .sort((a, b) => b['percent'].compareTo(a['percent']));
+                                for (int i = 0; i < _students.length; i++) {
+                                  _students[i]['order'] = i + 1;
+                                }
+                  
+                  
+                                examProcess.value = false;
+                  
+                                Get.to(ExamResultsAsImg(examResults: _students));
+                              },
+                              child:  CustomButton(text:  "Rasm")))  ,
+                      SizedBox(width: 16,),
+                      Expanded(
+                        child: InkWell(
+                          onTap: () {
+                            for (int i = 0; i < studentExams.length; i++) {
+                              if (isAlreadyTakenExam(studentExams[i]['exams'])) {
+                                studentController.editExam(
+                                    studentExams[i]['id'],
+                                    examId(studentExams[i]['exams']),
+                                    widget.examCount,
+                                    studentExams[i]['count'],
+                                    widget.examTitle,
+                                    widget.examDate);
+                              } else {
+                                print('also working ... ');
+                                studentController.addExam(
+                                    studentExams[i]['id'],
+                                    widget.examDate,
+                                    widget.examCount,
+                                    studentExams[i]['count'],
+                                    widget.examTitle);
+                              }
 
-                      },
-                      child:  CustomButton(
-                        isLoading: smsSendLoader.value,
-                        text: "Sms yuborish",
-                        color: Colors.green,
-                      )),
-                    ),
+                              Future.delayed(Duration(milliseconds: 111));
+                            }
+                            isEdit.value = false;
+                            // And send telegram on pdf format  ...
+                            List _students = [];
+                            for (var item in students) {
+                              int currentExamResult = 0;
+                              for (var exam in item['exams']) {
+                                if (exam['examDate'] == widget.examDate) {
+                                  currentExamResult = exam['howMany'].toString().isEmpty
+                                      ? 0
+                                      : int.parse(exam['howMany']);
+                                  break;
+                                }
+                              }
+                              _students.add({
+                                'order': "",
+                                'name': item['name'],
+                                'surname': item['surname'],
+                                'grade': currentExamResult,
+                                "questionCount": widget.examCount,
+                                'percent': double.parse(
+                                    ((currentExamResult / int.parse(widget.examCount)) *
+                                        100)
+                                        .toStringAsFixed(2)),
+                                'color': getColor(double.parse(
+                                    ((currentExamResult / int.parse(widget.examCount)) *
+                                        100)
+                                        .toStringAsFixed(2)))
+                              });
+                            }
+                            _students
+                                .sort((a, b) => b['percent'].compareTo(a['percent']));
+                            for (int i = 0; i < _students.length; i++) {
+                              _students[i]['order'] = i + 1;
+                            }
+
+                            print("AAA" + _students.toString());
+
+                            examsController.createPdfAndNotify(_students,
+                                "${widget.groupName} guruhi ${widget.examTitle} imtihoni natijalari");
+                          },
+                          child:   CustomButton(
+                            text:  "Pdf ",
+                            color: Colors.green,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 4,
+                      ),
+                  
+                    ],
                   ),
-            // Expanded(
-            //   child: InkWell(
-            //     onTap: () {
-            //       for (int i = 0; i < studentExams.length; i++) {
-            //         if (isAlreadyTakenExam(studentExams[i]['exams'])) {
-            //           studentController.editExam(
-            //               studentExams[i]['id'],
-            //               examId(studentExams[i]['exams']),
-            //               widget.examCount,
-            //               studentExams[i]['count'],
-            //               widget.examTitle,
-            //               widget.examDate);
-            //         } else {
-            //           print('also working ... ');
-            //           studentController.addExam(
-            //               studentExams[i]['id'],
-            //               widget.examDate,
-            //               widget.examCount,
-            //               studentExams[i]['count'],
-            //               widget.examTitle);
-            //         }
-            //
-            //         Future.delayed(Duration(milliseconds: 111));
-            //       }
-            //       isEdit.value = false;
-            //       // And send telegram on pdf format  ...
-            //       List _students = [];
-            //       for (var item in students) {
-            //         int currentExamResult = 0;
-            //         for (var exam in item['exams']) {
-            //           if (exam['examDate'] == widget.examDate) {
-            //             currentExamResult = exam['howMany'].toString().isEmpty
-            //                 ? 0
-            //                 : int.parse(exam['howMany']);
-            //             break;
-            //           }
-            //         }
-            //         _students.add({
-            //           'order': "",
-            //           'name': item['name'],
-            //           'surname': item['surname'],
-            //           'grade': currentExamResult,
-            //           "questionCount": widget.examCount,
-            //           'percent': double.parse(
-            //               ((currentExamResult / int.parse(widget.examCount)) *
-            //                   100)
-            //                   .toStringAsFixed(2)),
-            //           'color': getColor(double.parse(
-            //               ((currentExamResult / int.parse(widget.examCount)) *
-            //                   100)
-            //                   .toStringAsFixed(2)))
-            //         });
-            //       }
-            //       _students
-            //           .sort((a, b) => b['percent'].compareTo(a['percent']));
-            //       for (int i = 0; i < _students.length; i++) {
-            //         _students[i]['order'] = i + 1;
-            //       }
-            //
-            //       print("AAA" + _students.toString());
-            //
-            //       examsController.createPdfAndNotify(_students,
-            //           "${widget.groupName} guruhi ${widget.examTitle} imtihoni natijalari");
-            //     },
-            //     child: Obx(() => CustomButton(
-            //       text: examsController.createPdf.value ||
-            //           studentController.isLoading.value
-            //           ? "Pdf tayyorlanmoqda"
-            //           : "Pdf Ko'rinishida",
-            //       color: Colors.green,
-            //     )),
-            //   ),
-            // ),
-            // SizedBox(
-            //   width: 4,
-            // ),
-            // Expanded(
-            //     child: InkWell(
-            //         onTap: () async {
-            //           for (int i = 0; i < studentExams.length; i++) {
-            //             if (isAlreadyTakenExam(studentExams[i]['exams'])) {
-            //               studentController.editExam(
-            //                   studentExams[i]['id'],
-            //                   examId(studentExams[i]['exams']),
-            //                   widget.examCount,
-            //                   studentExams[i]['count'],
-            //                   widget.examTitle,
-            //                   widget.examDate);
-            //             } else {
-            //               print('also working ... ');
-            //               studentController.addExam(
-            //                   studentExams[i]['id'],
-            //                   widget.examDate,
-            //                   widget.examCount,
-            //                   studentExams[i]['count'],
-            //                   widget.examTitle);
-            //             }
-            //
-            //             Future.delayed(Duration(milliseconds: 111));
-            //           }
-            //           isEdit.value = false;
-            //           // And send telegram on pdf format  ...
-            //           List _students = [];
-            //           for (var item in students) {
-            //             int currentExamResult = 0;
-            //             for (var exam in item['exams']) {
-            //               if (exam['examDate'] == widget.examDate) {
-            //                 currentExamResult = exam['howMany'].toString().isEmpty
-            //                     ? 0
-            //                     : int.parse(exam['howMany']);
-            //                 break;
-            //               }
-            //             }
-            //
-            //             _students.add({
-            //               'order': "",
-            //               'name': item['name'],
-            //               'surname': item['surname'],
-            //               'grade': currentExamResult,
-            //               "questionCount": widget.examCount,
-            //               'percent': double.parse(
-            //                   ((currentExamResult / int.parse(widget.examCount)) *
-            //                       100)
-            //                       .toStringAsFixed(2)),
-            //               'color': getColor(double.parse(
-            //                   ((currentExamResult / int.parse(widget.examCount)) *
-            //                       100)
-            //                       .toStringAsFixed(2)))
-            //             });
-            //           }
-            //           _students
-            //               .sort((a, b) => b['percent'].compareTo(a['percent']));
-            //           for (int i = 0; i < _students.length; i++) {
-            //             _students[i]['order'] = i + 1;
-            //           }
-            //
-            //
-            //           examProcess.value = false;
-            //
-            //           Get.to(ExamResultsAsImg(examResults: _students));
-            //         },
-            //         child: Obx(()=>CustomButton(text: examProcess.value ? "Tayyorlanyapti":"Rasm ko'rinishida"))))
+                ),
+                  ),
+
           ],
         ),
       ),
-    );
+    ));
   }
 }

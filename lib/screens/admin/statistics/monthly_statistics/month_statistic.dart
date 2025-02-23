@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:leader/constants/custom_widgets/student_card.dart';
 import 'package:leader/constants/text_styles.dart';
+import 'package:leader/screens/admin/students/student_payment_history.dart';
 
 class MonthStatistics extends StatefulWidget {
   final String title;
@@ -40,25 +43,22 @@ class _MonthStatisticsState extends State<MonthStatistics>
                   .toLowerCase()
                   .contains(query.toLowerCase()))
           .toList();
-
-
-
     });
   }
 
-    @override
-    void dispose() {
-      _tabController.dispose();
-      _searchController.dispose();
-      super.dispose();
-    }
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.title,
+          widget.title+"asdasda",
           style: appBarStyle,
         ),
         bottom: TabBar(
@@ -68,7 +68,7 @@ class _MonthStatisticsState extends State<MonthStatistics>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Text('Unpaid'),
+                  Text('Qarzdorlar'),
                   Container(
                     padding: EdgeInsets.all(4),
                     alignment: Alignment.center,
@@ -90,7 +90,7 @@ class _MonthStatisticsState extends State<MonthStatistics>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  Text('Paid'),
+                  Text("To'laganlar"),
                   Container(
                     padding: EdgeInsets.all(4),
                     alignment: Alignment.center,
@@ -131,7 +131,7 @@ class _MonthStatisticsState extends State<MonthStatistics>
                       child: TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
-                          hintText: 'Search...',
+                          hintText: 'Qidirish...',
                           prefixIcon: Icon(Icons.search),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.0),
@@ -147,10 +147,32 @@ class _MonthStatisticsState extends State<MonthStatistics>
                       ? _filteredItems.length
                       : students.length,
                   itemBuilder: (context, index) {
-                    return StudentCard(
-                      item:isFeePaid == false
-                          ?_filteredItems[index]['items']: students[index]['items'],
-                      isFeePaid: isFeePaid,
+                    return InkWell(
+                      onTap: () {
+                        if (isFeePaid == false) {
+                          Get.to(
+                              AdminStudentPaymentHistory(
+                                date: widget.title,
+                              uniqueId: _filteredItems[index]['items']['uniqueId'],
+                              id: _filteredItems[index].id,
+                              name: _filteredItems[index]['items']['name'],
+                              surname: _filteredItems[index]['items']
+                                  ['surname'],
+                              paidMonths: _filteredItems[index]['items']
+                                  ['payments'],
+                              yeralyFee: _filteredItems[index]['items']
+                                  ['yeralyFee'].toString(),
+                              paymentType: _filteredItems[index]['items']
+                                  ['paymentType'],
+                              subject: 'Matematika'));
+                        }
+                      },
+                      child: StudentCard(
+                        item: isFeePaid == false
+                            ? _filteredItems[index]['items']
+                            : students[index]['items'],
+                        isFeePaid: isFeePaid,
+                      ),
                     );
                   },
                 ),
