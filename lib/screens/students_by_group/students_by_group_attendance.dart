@@ -503,8 +503,7 @@ class _AttendanceState extends State<Attendance> {
                                                                         students[i]
                                                                             [
                                                                             'payments'],
-                                                                        widget
-                                                                            .subject)
+                                                                     )
                                                                     .length !=
                                                                 0
                                                             ? Container(
@@ -512,7 +511,7 @@ class _AttendanceState extends State<Attendance> {
                                                                     EdgeInsets
                                                                         .all(4),
                                                                 child: Text(
-                                                                  '${calculateUnpaidMonths(students[i]['studyDays'], students[i]['payments'], widget.subject).length} oylik to\'lov qolgan',
+                                                                  '${calculateUnpaidMonths(students[i]['studyDays'], students[i]['payments'],   ).length} oylik to\'lov qolgan',
                                                                   style: TextStyle(
                                                                       color: Colors
                                                                           .white,

@@ -14,14 +14,87 @@ import 'package:share_plus/share_plus.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
+import '../../constants/utils.dart';
+
+
 class StatisticsController extends GetxController {
+
+
+
+  static RxBool loader = false.obs;
 
   RxInt order = 0.obs;
   GetStorage box = GetStorage();
 
-  String monthPayment(List payments,String month){
+  List calculateUnpaidMonths(List studyDays, List payments, ) {
+    var studyMonths = [];
+    var paidMonths = [];
+    var shouldPay = [];
+
+    for (int i = 0; i < studyDays.length; i++) {
+      if (!studyMonths.contains(
+        convertDateToMonthYear(studyDays[i]['studyDay'])
+            .toString()
+            .removeAllWhitespace +
+            "#" +
+            studyDays[i]['subject'],
+      )) {
+        studyMonths.add(
+          convertDateToMonthYear(studyDays[i]['studyDay'])
+              .toString()
+              .removeAllWhitespace +
+              "#" +
+              studyDays[i]['subject'],
+        );
+      }
+    }
+
+    for (int i = 0; i < payments.length; i++) {
+      if (!paidMonths.contains({
+        convertDateToMonthYear(payments[i]['paidDate'])
+            .toString()
+            .removeAllWhitespace +
+            "#" +
+            payments[i]['subject']
+      })) {
+        paidMonths.add(convertDateToMonthYear(payments[i]['paidDate'])
+            .toString()
+            .removeAllWhitespace +
+            "#" +
+            payments[i]['subject']);
+      }
+    }
+
+
+    for (int i = 0; i < studyMonths.length; i++) {
+      if (!paidMonths.contains(studyMonths[i])) {
+        shouldPay.add(studyMonths[i]);
+      }
+    }
+
+    return shouldPay;
+  }
+
+// Uzbek month names
+  List<String> uzbekMonths = [
+    "Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul",
+    "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"
+  ];
+
+
+
+
+
+
+
+
+
+
+  String monthPayment(List payments,String month,List studyDays,String monthInEnglish){
+    loader.value  = true;
     List currentMonthPayments =[];
-    for(var item in payments){
+    List debtMonths  = calculateUnpaidMonths(studyDays, payments);
+     for(var item in payments){
 
 
       if(DateFormat.MMMM('uz_UZ').format(DateFormat('dd-MM-yyyy').parse(item['paidDate'])).toLowerCase().toString()
@@ -39,7 +112,36 @@ class StatisticsController extends GetxController {
     for(var itm in currentMonthPayments){
         result += "${itm['sum']}-->${itm['code']} (${itm['subject']}) \n";
     }
-     return result;
+
+    if(result.isNotEmpty){
+      return result;
+    }
+    else {
+      String debtMonth = "";
+
+      for(var item in debtMonths){
+        if(item.contains(monthInEnglish)){
+          debtMonth += "$item\n";
+        }
+      }
+
+      if(debtMonth.isNotEmpty){
+        result ="Qarz $debtMonth";
+      }
+      else {
+        result  = "X";
+      }
+
+      loader.value = false;
+
+      return result;
+
+
+
+    }
+
+
+
 
   }
 
@@ -50,89 +152,8 @@ class StatisticsController extends GetxController {
 
 
 
-
-  // Future<File> generatePdf(List students) async {
-  //   final pdf = pw.Document();
-  //    students.sort((a, b) => (a['surname']).compareTo(b['name']));
-  //    for(int i = 0 ; i < students.length; i++){
-  //      print(i);
-  //      students[i]['order'] = i+1;
-  //    }
-  //
-  //
-  //   final fontData = await rootBundle.load("assets/fonts/Roboto-Regular.ttf");
-  //   final ttf = pw.Font.ttf(fontData.buffer.asByteData());
-  //   const int studentsPerPage = 50; // Number of students per page
-  //   int totalPages = (students.length / studentsPerPage).ceil();
-  //
-  //   for (int i = 0; i < totalPages; i++) {
-  //     final start = i * studentsPerPage;
-  //     final end = (start + studentsPerPage > students.length) ? students.length : (start + studentsPerPage);
-  //   pdf.addPage(
-  //
-  //     pw.Page(
-  //       build: (context) {
-  //         return pw.Table(
-  //             border: pw.TableBorder.all(),
-  //           children: [
-  //             // Table header row
-  //             pw.TableRow(
-  //               decoration: pw.BoxDecoration(color: PdfColors.grey300),
-  //               children: [
-  //                 pw.Text(' № ', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold,fontSize: 8,),textAlign: pw.TextAlign.center),
-  //                 pw.Text(' Familiyasi ', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold,fontSize: 8),textAlign: pw.TextAlign.center),
-  //                 pw.Text(' Ismi ', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold,fontSize: 8),textAlign: pw.TextAlign.center),
-  //                 pw.Text(' Keldi ', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold,fontSize: 8),textAlign: pw.TextAlign.center),
-  //
-  //                 pw.Text('Sentabr', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                 pw.Text('Oktabr', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                 pw.Text('Noyabr', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                 pw.Text('Dekabr', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                 pw.Text('Yanvar', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                 pw.Text('Fevral', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                 pw.Text('Mart', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                 pw.Text('Aprel', style: pw.TextStyle(font: ttf, fontWeight: pw.FontWeight.bold,fontSize: 6),textAlign: pw.TextAlign.center),
-  //
-  //               ],
-  //             ),
-  //             // Table rows with conditional coloring based on grade
-  //             ...students.sublist(start, end,).map((student) {
-  //
-  //
-  //
-  //
-  //               return pw.TableRow(
-  //                 decoration: pw.BoxDecoration(color: student['color']),
-  //                 children: [
-  //                   pw.Text(student['order'].toString().capitalizeFirst!, style: pw.TextStyle(font: ttf,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                   pw.Text(' '+student['surname'].toString().capitalizeFirst!, style: pw.TextStyle(font: ttf,fontSize: 6),textAlign: pw.TextAlign.center),
-  //
-  //                   pw.Text(student['name'].toString().capitalizeFirst!, style: pw.TextStyle(font: ttf,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                   pw.Text(student['startedDay'].toString().capitalizeFirst!, style: pw.TextStyle(font: ttf,fontSize: 4),textAlign: pw.TextAlign.center),
-  //                   pw.Text("${monthPayment(student['payments'], 'Sentabr')}", style: pw.TextStyle(font: ttf,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                   pw.Text("${monthPayment(student['payments'], 'Oktabr')}", style: pw.TextStyle(font: ttf,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                   pw.Text("${monthPayment(student['payments'], 'Noyabr')}", style: pw.TextStyle(font: ttf,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                   pw.Text("${monthPayment(student['payments'], 'Dekabr')}", style: pw.TextStyle(font: ttf,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                   pw.Text("${monthPayment(student['payments'], 'Yanvar')}", style: pw.TextStyle(font: ttf,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                   pw.Text("${monthPayment(student['payments'], 'Fevral')}", style: pw.TextStyle(font: ttf,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                   pw.Text("${monthPayment(student['payments'], 'Mart')}", style: pw.TextStyle(font: ttf,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                   pw.Text("${monthPayment(student['payments'], 'Aprel')}", style: pw.TextStyle(font: ttf,fontSize: 6),textAlign: pw.TextAlign.center),
-  //                 ],
-  //               );
-  //             }).toList(),
-  //           ],
-  //         );
-  //       },
-  //     ),
-  //   );}
-  //
-  //   final output = await getTemporaryDirectory();
-  //   final file = File("${output.path}/${DateTime.now()}.pdf");
-  //   await file.writeAsBytes(await pdf.save());
-  //   print(file);
-  //   return file;
-  // }
   Future<File> generatePdf(List students) async {
+    loader.value = true;
     final pdf = pw.Document();
 
     // Fix sorting (surname vs. surname instead of surname vs. name)
@@ -145,7 +166,7 @@ class StatisticsController extends GetxController {
     final fontData = await rootBundle.load("assets/fonts/Roboto-Regular.ttf");
     final ttf = pw.Font.ttf(fontData.buffer.asByteData());
 
-    const int studentsPerPage = 20;
+    const int studentsPerPage = 10;
     int totalPages = (students.length / studentsPerPage).ceil();
 
     for (int i = 0; i < totalPages; i++) {
@@ -199,14 +220,14 @@ class StatisticsController extends GetxController {
                       cell(student['surname'].toString(), ttf, 6),
                       cell(student['name'].toString(), ttf, 6),
                       cell(student['startedDay'].toString(), ttf, 5),
-                      cell(monthPayment(student['payments'], 'Sentabr'), ttf, 6),
-                      cell(monthPayment(student['payments'], 'Oktabr'), ttf, 6),
-                      cell(monthPayment(student['payments'], 'Noyabr'), ttf, 6),
-                      cell(monthPayment(student['payments'], 'Dekabr'), ttf, 6),
-                      cell(monthPayment(student['payments'], 'Yanvar'), ttf, 6),
-                      cell(monthPayment(student['payments'], 'Fevral'), ttf, 6),
-                      cell(monthPayment(student['payments'], 'Mart'), ttf, 6),
-                      cell(monthPayment(student['payments'], 'Aprel'), ttf, 6),
+                      cell(monthPayment(student['payments'], 'Sentabr',student['studyDays'],"September"), ttf, 6),
+                      cell(monthPayment(student['payments'], 'Oktabr',student['studyDays'],'October'), ttf, 6),
+                      cell(monthPayment(student['payments'], 'Noyabr',student['studyDays'],'November'), ttf, 6),
+                      cell(monthPayment(student['payments'], 'Dekabr',student['studyDays'],'December'), ttf, 6),
+                      cell(monthPayment(student['payments'], 'Yanvar',student['studyDays'],'January'), ttf, 6),
+                      cell(monthPayment(student['payments'], 'Fevral',student['studyDays'],'February'), ttf, 6),
+                      cell(monthPayment(student['payments'], 'Mart',student['studyDays'],'March'), ttf, 6),
+                      cell(monthPayment(student['payments'], 'Aprel',student['studyDays'],'April'), ttf, 6),
                     ],
                   );
                 }).toList(),
@@ -220,6 +241,8 @@ class StatisticsController extends GetxController {
     final output = await getTemporaryDirectory();
     final file = File("${output.path}/${DateTime.now()}.pdf");
     await file.writeAsBytes(await pdf.save());
+    loader.value = false;
+
     return file;
   }
 
@@ -265,11 +288,14 @@ class StatisticsController extends GetxController {
 
   Rx createPdf = false.obs;
 
-  Future<void> createPdfAndNotify(List students,String title) async {
+  Future<void> createPdfAndNotify(List students,String title, ) async {
+    loader.value = true;
     createPdf.value = true;
     var pdf = await generatePdf(students);
     shareToTelegram(pdf,title);
     createPdf.value = false;
+    loader.value = false;
+
   }
 
 

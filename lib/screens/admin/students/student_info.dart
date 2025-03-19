@@ -538,7 +538,7 @@ class _StudentInfoState extends State<StudentInfo> {
                     height: 2,
                   ),
                   calculateUnpaidMonths(data['items']['studyDays'],
-                      data['items']['payments'], widget.subject)
+                      data['items']['payments'],  )
                       .length !=
                       0
                       ? InkWell(
@@ -547,7 +547,7 @@ class _StudentInfoState extends State<StudentInfo> {
                         months: calculateUnpaidMonths(
                             data['items']['studyDays'],
                             data['items']['payments'],
-                            widget.subject),
+                           ),
                         studentPhone: data['items']['phone'],
                         studentName: data['items']['name'],
                         studentSurname: data['items']['surname'],
@@ -577,7 +577,7 @@ class _StudentInfoState extends State<StudentInfo> {
                               child: Text(
                                 "${calculateUnpaidMonths(
                                     data['items']['studyDays'],
-                                    data['items']['payments'], widget.subject)
+                                    data['items']['payments'],  )
                                     .length}",
                                 style: TextStyle(color: Colors.white),
                               ),
@@ -592,7 +592,7 @@ class _StudentInfoState extends State<StudentInfo> {
                   )
                       : SizedBox(),
                   calculateUnpaidMonths(data['items']['studyDays'],
-                      data['items']['payments'], widget.subject)
+                      data['items']['payments'],  )
                       .length !=
                       0
                       ? SizedBox(

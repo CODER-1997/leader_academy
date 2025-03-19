@@ -274,7 +274,7 @@ bool isCurrentMonth(String monthYear) {
   return inputMonth == currentMonth && inputYear == currentYear;
 }
 
-List calculateUnpaidMonths(List studyDays, List payments, String subject) {
+List calculateUnpaidMonths(List studyDays, List payments, ) {
    var studyMonths = [];
   var paidMonths = [];
   var shouldPay = [];
