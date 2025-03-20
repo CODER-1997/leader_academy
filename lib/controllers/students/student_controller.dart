@@ -367,9 +367,9 @@ class StudentController extends GetxController {
 
   RxBool courseFee = true.obs;
 
-  void addPayment(String documentId, String paidDate, String subject) async {
+  void addPayment(String documentId, String paidDate, String subject,String paymentSum) async {
     isLoading.value = true;
-    if (payment.text.isNotEmpty) {
+    if (paymentSum.toString().length>0) {
       try {
         // Retrieve the document reference
         DocumentReference documentReference = FirebaseFirestore.instance
@@ -404,7 +404,7 @@ class StudentController extends GetxController {
         // else{
         currentArray.add({
           'paidDate': paidDate,
-          'paidSum': payment.text.removeAllWhitespace,
+          'paidSum': paymentSum ,
           'courseFee': courseFee.value,
           'paymentCode': paymentComment.text,
           'id': generateUniqueId(),
@@ -416,9 +416,7 @@ class StudentController extends GetxController {
         });
 
         isLoading.value = false;
-        Get.back();
-        paymentComment.clear();
-        payment.clear();
+
       } catch (e) {
         // Handle errors here
         print('Error adding item to array: $e');
@@ -435,9 +433,9 @@ class StudentController extends GetxController {
 
   // Edit payment
 
-  void editPayment(String documentId, String uniqueId, String subject, ) async {
+  void editPayment(String documentId, String uniqueId, String subject,String paidSum,String paidDate ) async {
     isLoading.value = true;
-    if (payment.text.isNotEmpty) {
+    if (paidSum.isNotEmpty) {
       try {
         // Retrieve the document reference
         DocumentReference documentReference = FirebaseFirestore.instance
@@ -463,8 +461,8 @@ class StudentController extends GetxController {
         }
         if (index != -1) {
           currentArray[index] = {
-            'paidDate': paidDate.value,
-            'paidSum': payment.text.removeAllWhitespace,
+            'paidDate': paidDate,
+            'paidSum': paidSum,
             'paymentCode': paymentComment.text,
             'id': uniqueId,
             'subject': subject
@@ -478,11 +476,9 @@ class StudentController extends GetxController {
 
         // Optional: Provide feedback to the user
 
-        payment.clear();
-        paidDate.value = '';
-        isLoading.value = false;
-        paymentComment.clear();
-        Get.back();
+
+         isLoading.value = false;
+
       } catch (e) {
         // Handle errors here
         print('Error adding item to array: $e');

@@ -394,7 +394,7 @@ List<String> generateMonths() {
   DateTime now = DateTime.now();
 
   // Add 6 months before the current month, current month, and 6 months after
-  for (int i = -4; i <= 6; i++) {
+  for (int i = -6; i <= 6; i++) {
     // Set a fixed day (e.g., 10nd of each month)
     DateTime date = DateTime(now.year, now.month + i, 10);
     String formattedDate =
